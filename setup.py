@@ -3,7 +3,7 @@ __version__ = '0.1'
 import os
 from setuptools import setup, find_packages
 
-setup(name='repoze',
+setup(name='repoze.tm',
       version=__version__,
       description='Zope-like transaction manager via WSGI middleware',
       long_description=""" Long description XXX """,
@@ -23,13 +23,14 @@ setup(name='repoze',
       keywords='web application server wsgi zope',
       author="Agendaless Consulting",
       author_email="repoze-dev@lists.repoze.org",
+      dependency_links=['http://dist.repoze.org'],
       url="http://www.repoze.org",
       license="ZPL 2.0",
       packages=find_packages(),
       include_package_data=True,
       namespace_packages=['repoze'],
       zip_safe=False,
-      install_requires=['ZODB3'],
+      install_requires=['ZODB3 >= 3.8.0b3'],
       test_suite = "repoze.tm.tests",
       entry_points="""
       [paste.filter_app_factory]
