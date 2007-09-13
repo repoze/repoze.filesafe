@@ -21,16 +21,36 @@ class TM:
 
     def commit(self, environ):
         transaction.commit()
-        self.cleanup(environ)
+        after_end.cleanup(environ)
 
     def abort(self, environ):
         transaction.abort()
-        self.cleanup(environ)
+        after_end.cleanup(environ)
+
+# Callback registry API helper class
+class AfterEnd:
+    key = 'repoze.tm.afterend'
+    def register(self, func, environ):
+        cleanup = environ.setdefault(self.key, [])
+        cleanup.append(func)
+
+    def unregister(self, func, environ):
+        cleanup = environ.get(self.key, [])
+        new = []
+        for f in cleanup:
+            if f is func:
+                continue
+            new.append(f)
+        environ[self.key] = new
 
     def cleanup(self, environ):
-        cleanup = environ.get('tm.cleanup', None)
-        if cleanup is not None:
-            cleanup.clear()
+        for func in environ.setdefault(self.key, []):
+            func()
+        del environ[self.key]
 
+# singleton, importable by other modules
+after_end = AfterEnd()
+    
 def make_tm(app, global_conf):
     return TM(app)
+
