@@ -1,4 +1,4 @@
-__version__ = '0.1'
+__version__ = '0.2'
 
 import os
 from setuptools import setup, find_packages
@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(name='repoze.tm',
       version=__version__,
       description='Zope-like transaction manager via WSGI middleware',
-      long_description=""" Long description XXX """,
+      long_description='',
       classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
@@ -20,7 +20,7 @@ setup(name='repoze.tm',
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware",
         "Framework :: Zope3",
         ],
-      keywords='web application server wsgi zope',
+      keywords='web application server wsgi zope repoze',
       author="Agendaless Consulting",
       author_email="repoze-dev@lists.repoze.org",
       dependency_links=['http://dist.repoze.org'],
