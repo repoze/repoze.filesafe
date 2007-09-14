@@ -1,1 +1,3 @@
-repoze.tm.egg-info
+*.egg-info
+*.egg
+dist
