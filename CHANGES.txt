@@ -1,0 +1,12 @@
+0.3
+
+ Provide limited compatibility for older transaction package versions
+ which don't support the 'transaction.isDoomed' API.
+
+0.2
+
+ Provide after_end API for registering callbacks at transaction end.
+
+0.1
+
+  Initial Release

@@ -13,7 +13,7 @@ class TM:
             self.abort(environ)
             raise
         else:
-            if transaction.isDoomed():
+            if hasattr(transaction, 'isDoomed') and transaction.isDoomed():
                 self.abort(environ)
             else:
                 self.commit(environ)
