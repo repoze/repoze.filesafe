@@ -1,3 +1,10 @@
+0.4
+
+ Depend on zopelib rather than ZODB 3.8.0b3 distribution, because the
+ ZODB distribution pulls in various packages (zope.interface and ZEO
+ most notably) that are incompatible with stock Zope 2.10.4 apps and
+ older sandboxes.  We'll need to revisit this.
+
 0.3
 
  Provide limited compatibility for older transaction package versions

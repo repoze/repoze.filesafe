@@ -1,4 +1,4 @@
-__version__ = '0.3'
+__version__ = '0.4'
 
 import os
 from setuptools import setup, find_packages
@@ -30,7 +30,7 @@ setup(name='repoze.tm',
       include_package_data=True,
       namespace_packages=['repoze'],
       zip_safe=False,
-      install_requires=['ZODB3 >= 3.8.0b3'],
+      install_requires=['zopelib >= 2.10.4.2'],
       test_suite = "repoze.tm.tests",
       entry_points="""
       [paste.filter_app_factory]
