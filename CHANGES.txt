@@ -1,3 +1,9 @@
+0.5
+
+ Depend on rerolled ZODB 3.7.1 instead of zopelib.
+
+ Add license and copyright, change trove classifiers.
+
 0.4
 
  Depend on zopelib rather than ZODB 3.8.0b3 distribution, because the
