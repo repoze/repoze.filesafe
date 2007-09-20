@@ -9,4 +9,5 @@ class RepozeTMSync:
         for thing in self.after:
             thing()
 
-        
+Store the after_end callbacks on the transaction rather than in the
+environment.
