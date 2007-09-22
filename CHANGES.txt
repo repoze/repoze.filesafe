@@ -1,3 +1,16 @@
+0.6
+
+ after_end.register and after_end.unregister must now be passed a
+ transaction object rather than a WSGI environment to avoid the
+ possibility that the WSGI environment used by a child participating
+ in transaction management won't be the same one used by the repoze.tm
+ package.
+
+ repoze.tm now inserts a key into the WSGI environment
+ ('repoze.tm.active') if it's active in the WSGI pipeline.  An API
+ function, repoze.tm:isActive can be called with a single argument,
+ the WSGI environment, to check if the middleware is active.
+
 0.5
 
  Depend on rerolled ZODB 3.7.1 instead of zopelib.

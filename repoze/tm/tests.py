@@ -7,11 +7,16 @@ class TestTM(unittest.TestCase):
         from repoze.tm import TM
         return TM
 
-    def _makeOne(self, app, endregistrations=None):
-        from repoze.tm import after_end
-        if endregistrations:
-            after_end.register(*endregistrations)
+    def _makeOne(self, app):
         return self._getTargetClass()(app)
+
+    def test_ekey_inserted(self):
+        app = DummyApplication()
+        tm = self._makeOne(app)
+        from repoze.tm import ekey
+        env = {}
+        tm(env, None)
+        self.failUnless(ekey in env)
 
     def test_committed(self):
         resource = DummyResource()
@@ -54,8 +59,9 @@ class TestTM(unittest.TestCase):
             dummycalled.append(True)
         env = {}
         resource = DummyResource()
-        app = DummyApplication(resource, exception=False, doom=False)
-        tm = self._makeOne(app, (dummy, env))
+        app = DummyApplication(resource, exception=False, doom=False,
+                               register=dummy)
+        tm = self._makeOne(app)
         tm(env, None)
         self.assertEqual(resource.committed, True)
         self.assertEqual(resource.aborted, False)
@@ -67,8 +73,9 @@ class TestTM(unittest.TestCase):
             dummycalled.append(True)
         env = {}
         resource = DummyResource()
-        app = DummyApplication(resource, exception=True, doom=False)
-        tm = self._makeOne(app, (dummy, env))
+        app = DummyApplication(resource, exception=True, doom=False,
+                               register=dummy)
+        tm = self._makeOne(app)
         self.assertRaises(ValueError, tm, env, None)
         self.assertEqual(resource.committed, False)
         self.assertEqual(resource.aborted, True)
@@ -85,35 +92,54 @@ class TestAfterEnd(unittest.TestCase):
     def test_register(self):
         registry = self._makeOne()
         func = lambda *x: None
-        environ = {}
-        registry.register(func, environ)
-        self.assertEqual(environ[registry.key], [func])
+        txn = DummyTransaction()
+        registry.register(func, txn)
+        self.assertEqual(getattr(txn, registry.key), [func])
 
     def test_unregister_exists(self):
         registry = self._makeOne()
         func = lambda *x: None
-        environ = {}
-        registry.register(func, environ)
-        registry.unregister(func, environ)
-        self.assertEqual(environ[registry.key], [])
+        txn = DummyTransaction()
+        registry.register(func, txn)
+        self.assertEqual(getattr(txn, registry.key), [func])
+        registry.unregister(func, txn)
+        self.failIf(hasattr(txn, registry.key))
         
     def test_unregister_notexists(self):
         registry = self._makeOne()
         func = lambda *x: None
-        environ = {registry.key:[None]}
-        registry.unregister(func, environ)
-        self.assertEqual(environ[registry.key], [None])
+        txn = DummyTransaction()
+        setattr(txn, registry.key, [None])
+        registry.unregister(func, txn)
+        self.assertEqual(getattr(txn, registry.key), [None])
+
+class UtilityFunctionTests(unittest.TestCase):
+    def test_isActive(self):
+        from repoze.tm import ekey
+        from repoze.tm import isActive
+        self.assertEqual(isActive({ekey:True}), True)
+        self.assertEqual(isActive({}), False)
+
+class DummyTransaction:
+    pass
 
 class DummyApplication:
-    def __init__(self, resource, doom=False, exception=False):
+    def __init__(self, resource=None, doom=False, exception=False,
+                 register=None):
         self.resource = resource
         self.doom = doom
         self.exception = exception
+        self.register = register
         
     def __call__(self, environ, start_response):
-        transaction.get().join(self.resource)
+        t = transaction.get()
+        if self.resource:
+            t.join(self.resource)
+        if self.register:
+            from repoze.tm import after_end
+            after_end.register(self.register, t)
         if self.doom:
-            transaction.doom()
+            t.doom()
         if self.exception:
             raise ValueError('raising')
         return ['hello']
