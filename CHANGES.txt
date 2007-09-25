@@ -1,3 +1,8 @@
+0.7
+
+ Depend on PyPI release of ZODB 3.7.2.  Upgrade to this by doing
+ bin/easy_install -U 'ZODB3 >= 3.7.1, < 3.8.0a' if necessary.
+
 0.6
 
  after_end.register and after_end.unregister must now be passed a
