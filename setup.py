@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
 
-setup(name='repoze.tm',
+setup(name='repoze.tm2',
       version=__version__,
       description='Zope-like transaction manager via WSGI middleware',
       long_description=README,
