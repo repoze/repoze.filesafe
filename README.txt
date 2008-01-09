@@ -1,9 +1,14 @@
-repoze.tm (Transaction Manager)
+repoze.tm2 (Transaction Manager, without ZODB3 dependencies)
 
 Overview
 
-  Middleware which uses the ZODB transaction manager to wrap a call to
-  its pipeline children inside a transaction.
+  Middleware which uses the "transaction" package's transaction
+  manager to wrap a call to its pipeline children inside a
+  transaction.  repoze.tm2 is equivalent to the package from which it
+  was forked, repoze.tm, except it has no ZODB dependencies.  It is an
+  error to install both repoze.tm and repoze.tm2 into the same
+  environment, as they provide the same entry points and import
+  points.
 
 Behavior
 

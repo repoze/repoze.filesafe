@@ -1,19 +1,22 @@
-Next Release
+repoze.tm2 1.0a1:
+
+ Fork point: we've created repoze.tm2, which is repoze.tm that has a
+ dependency only on the 'transaction' package instead of all of ZODB.
 
  Better documentation for non-Zope usage in README.txt.
 
-0.8
+repoze.tm 0.8
 
  Relaxed requirement for ZODB 3.7.2, since we might need to use
  the package with other verions.  Note that the tests which depend
  on transaction having "doom" semantics don't work with 3.7.2, anyway.
 
-0.7
+repoze.tm 0.7
 
  Depend on PyPI release of ZODB 3.7.2.  Upgrade to this by doing
  bin/easy_install -U 'ZODB3 >= 3.7.1, < 3.8.0a' if necessary.
 
-0.6
+repoze.tm 0.6
 
  after_end.register and after_end.unregister must now be passed a
  transaction object rather than a WSGI environment to avoid the
@@ -26,28 +29,28 @@ Next Release
  function, repoze.tm:isActive can be called with a single argument,
  the WSGI environment, to check if the middleware is active.
 
-0.5
+repoze.tm 0.5
 
  Depend on rerolled ZODB 3.7.1 instead of zopelib.
 
  Add license and copyright, change trove classifiers.
 
-0.4
+repoze.tm 0.4
 
  Depend on zopelib rather than ZODB 3.8.0b3 distribution, because the
  ZODB distribution pulls in various packages (zope.interface and ZEO
  most notably) that are incompatible with stock Zope 2.10.4 apps and
  older sandboxes.  We'll need to revisit this.
 
-0.3
+repoze.tm 0.3
 
  Provide limited compatibility for older transaction package versions
  which don't support the 'transaction.isDoomed' API.
 
-0.2
+repoze.tm 0.2
 
  Provide after_end API for registering callbacks at transaction end.
 
-0.1
+repoze.tm 0.1
 
   Initial Release

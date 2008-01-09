@@ -1,4 +1,4 @@
-__version__ = '0.8'
+__version__ = '1.0a1'
 
 import os
 from setuptools import setup, find_packages
@@ -27,7 +27,7 @@ setup(name='repoze.tm',
       include_package_data=True,
       namespace_packages=['repoze'],
       zip_safe=False,
-      install_requires=['ZODB3'], # transaction, really
+      install_requires=['transaction'],
       test_suite = "repoze.tm.tests",
       entry_points="""
       [paste.filter_app_factory]
