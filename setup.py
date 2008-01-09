@@ -28,6 +28,7 @@ setup(name='repoze.tm',
       namespace_packages=['repoze'],
       zip_safe=False,
       install_requires=['transaction'],
+      tests_require=['transaction'],
       test_suite = "repoze.tm.tests",
       entry_points="""
       [paste.filter_app_factory]
