@@ -7,22 +7,25 @@ class TestTM(unittest.TestCase):
         from repoze.tm import TM
         return TM
 
-    def _makeOne(self, app):
-        return self._getTargetClass()(app)
+    def _start_response(self, status, headers, exc_info=None):
+        pass
+
+    def _makeOne(self, app, commit_veto=None):
+        return self._getTargetClass()(app, commit_veto)
 
     def test_ekey_inserted(self):
         app = DummyApplication()
         tm = self._makeOne(app)
         from repoze.tm import ekey
         env = {}
-        tm(env, None)
+        tm(env, self._start_response)
         self.failUnless(ekey in env)
 
     def test_committed(self):
         resource = DummyResource()
         app = DummyApplication(resource)
         tm = self._makeOne(app)
-        result = tm({}, None)
+        result = tm({}, self._start_response)
         self.assertEqual(result, ['hello'])
         self.assertEqual(resource.committed, True)
         self.assertEqual(resource.aborted, False)
@@ -31,7 +34,7 @@ class TestTM(unittest.TestCase):
         resource = DummyResource()
         app = DummyApplication(resource, doom=True)
         tm = self._makeOne(app)
-        result = tm({}, None)
+        result = tm({}, self._start_response)
         self.assertEqual(result, ['hello'])
         self.assertEqual(transaction.isDoomed(), False)
         self.assertEqual(resource.committed, False)
@@ -41,7 +44,7 @@ class TestTM(unittest.TestCase):
         resource = DummyResource()
         app = DummyApplication(resource, exception=True)
         tm = self._makeOne(app)
-        self.assertRaises(ValueError, tm, {}, None)
+        self.assertRaises(ValueError, tm, {}, self._start_response)
         self.assertEqual(resource.committed, False)
         self.assertEqual(resource.aborted, True)
         
@@ -49,7 +52,33 @@ class TestTM(unittest.TestCase):
         resource = DummyResource()
         app = DummyApplication(resource, exception=True, doom=True)
         tm = self._makeOne(app)
-        self.assertRaises(ValueError, tm, {}, None)
+        self.assertRaises(ValueError, tm, {}, self._start_response)
+        self.assertEqual(resource.committed, False)
+        self.assertEqual(resource.aborted, True)
+
+    def test_aborted_via_commit_veto(self):
+        resource = DummyResource()
+        app = DummyApplication(resource, status="403 Forbidden")
+        def commit_veto(environ, status, headers):
+            self.failUnless(isinstance(environ, dict),
+                            "environ is not passed properly")
+            self.failUnless(isinstance(headers, list),
+                            "headers are not passed properly")
+            self.failUnless(isinstance(status, str),
+                            "status is not passed properly")
+            return not (200 <= int(status.split()[0]) < 400)
+        tm = self._makeOne(app, commit_veto)
+        tm({}, self._start_response)
+        self.assertEqual(resource.committed, False)
+        self.assertEqual(resource.aborted, True)
+
+    def test_aborted_via_commit_veto_exception(self):
+        resource = DummyResource()
+        app = DummyApplication(resource, status="403 Forbidden")
+        def commit_veto(environ, status, headers):
+            raise ValueError('foo')
+        tm = self._makeOne(app, commit_veto)
+        self.assertRaises(ValueError, tm, {}, self._start_response)
         self.assertEqual(resource.committed, False)
         self.assertEqual(resource.aborted, True)
 
@@ -62,7 +91,7 @@ class TestTM(unittest.TestCase):
         app = DummyApplication(resource, exception=False, doom=False,
                                register=dummy)
         tm = self._makeOne(app)
-        tm(env, None)
+        tm(env, self._start_response)
         self.assertEqual(resource.committed, True)
         self.assertEqual(resource.aborted, False)
         self.assertEqual(dummycalled, [True])
@@ -76,7 +105,7 @@ class TestTM(unittest.TestCase):
         app = DummyApplication(resource, exception=True, doom=False,
                                register=dummy)
         tm = self._makeOne(app)
-        self.assertRaises(ValueError, tm, env, None)
+        self.assertRaises(ValueError, tm, env, self._start_response)
         self.assertEqual(resource.committed, False)
         self.assertEqual(resource.aborted, True)
         self.assertEqual(dummycalled, [True])
@@ -125,13 +154,15 @@ class DummyTransaction:
 
 class DummyApplication:
     def __init__(self, resource=None, doom=False, exception=False,
-                 register=None):
+                 register=None, status="200 OK"):
         self.resource = resource
         self.doom = doom
         self.exception = exception
         self.register = register
+        self.status = status
         
     def __call__(self, environ, start_response):
+        start_response(self.status, [], None)
         t = transaction.get()
         if self.resource:
             t.join(self.resource)

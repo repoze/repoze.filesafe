@@ -1,3 +1,7 @@
+Next release
+
+ Provide "commit_veto" hook point (contributed by Alberto Valverde).
+ 
 repoze.tm2 1.0a1:
 
  Fork point: we've created repoze.tm2, which is repoze.tm that has a

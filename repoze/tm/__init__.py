@@ -4,14 +4,19 @@ import transaction
 ekey = 'repoze.tm.active'
 
 class TM:
-    def __init__(self, application):
+    def __init__(self, application, commit_veto=None):
         self.application = application
+        self.commit_veto = commit_veto
         
     def __call__(self, environ, start_response):
         environ[ekey] = True
         transaction.begin()
+        ctx = {}
+        def save_status_and_headers(status, headers, exc_info=None):
+            ctx.update(status=status, headers=headers)
+            return start_response(status, headers, exc_info)
         try:
-            result = self.application(environ, start_response)
+            result = self.application(environ, save_status_and_headers)
         except:
             self.abort()
             raise
@@ -19,6 +24,13 @@ class TM:
             # ZODB 3.8 + has isDoomed
             if hasattr(transaction, 'isDoomed') and transaction.isDoomed():
                 self.abort()
+            if self.commit_veto is not None:
+                try:
+                    if self.commit_veto(environ, ctx['status'], ctx['headers']):
+                        self.abort()
+                except:
+                    self.abort()
+                    raise
             else:
                 self.commit()
         return result
