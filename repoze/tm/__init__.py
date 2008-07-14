@@ -31,6 +31,8 @@ class TM:
                 except:
                     self.abort()
                     raise
+                else:
+                    self.commit()
             else:
                 self.commit()
         return result

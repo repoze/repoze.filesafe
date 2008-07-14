@@ -72,6 +72,16 @@ class TestTM(unittest.TestCase):
         self.assertEqual(resource.committed, False)
         self.assertEqual(resource.aborted, True)
 
+    def test_committed_via_commit_veto_exception(self):
+        resource = DummyResource()
+        app = DummyApplication(resource, status="403 Forbidden")
+        def commit_veto(environ, status, headers):
+            return None
+        tm = self._makeOne(app, commit_veto)
+        tm({}, self._start_response)
+        self.assertEqual(resource.committed, True)
+        self.assertEqual(resource.aborted, False)
+
     def test_aborted_via_commit_veto_exception(self):
         resource = DummyResource()
         app = DummyApplication(resource, status="403 Forbidden")
