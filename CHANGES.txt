@@ -1,6 +1,8 @@
-Next release
+repoze.tm2 1.0a2 (2008/7/15)
 
  Provide "commit_veto" hook point (contributed by Alberto Valverde).
+
+ Point easy_install at http://dist.repoze.org/tm2/dev/simple via setup.cfg.
  
 repoze.tm2 1.0a1:
 

@@ -1,15 +1,16 @@
-__version__ = '1.0a1'
+__version__ = '1.0a2'
 
 import os
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
+CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 setup(name='repoze.tm2',
       version=__version__,
       description='Zope-like transaction manager via WSGI middleware',
-      long_description=README,
+      long_description=README + "\n\n" + CHANGES,
       classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
