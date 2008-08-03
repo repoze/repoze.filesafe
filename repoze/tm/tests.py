@@ -159,6 +159,20 @@ class UtilityFunctionTests(unittest.TestCase):
         self.assertEqual(isActive({ekey:True}), True)
         self.assertEqual(isActive({}), False)
 
+class TestMakeTM(unittest.TestCase):
+    def test_make_tm_withveto(self):
+        from repoze.tm import make_tm
+        tm = make_tm(DummyApplication(), {}, 'repoze.tm.tests:fakeveto')
+        self.assertEqual(tm.commit_veto, fakeveto)
+
+    def test_make_tm_noveto(self):
+        from repoze.tm import make_tm
+        tm = make_tm(DummyApplication(), {}, None)
+        self.assertEqual(tm.commit_veto, None)
+
+def fakeveto(environ, status, headers):
+    pass
+
 class DummyTransaction:
     pass
 

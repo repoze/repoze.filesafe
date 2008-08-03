@@ -86,6 +86,9 @@ class AfterEnd:
 # singleton, importable by other modules
 after_end = AfterEnd()
     
-def make_tm(app, global_conf):
-    return TM(app)
+def make_tm(app, global_conf, commit_veto=None):
+    from pkg_resources import EntryPoint
+    if commit_veto is not None:
+        commit_veto = EntryPoint.parse('x=%s' % commit_veto).load(False)
+    return TM(app, commit_veto)
 

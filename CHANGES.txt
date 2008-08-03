@@ -1,3 +1,15 @@
+repoze.tm2 1.0a3
+
+ Allow ``commit_veto`` hook to be specified within Paste config, ala::
+
+   [filter:tm]
+   use = repoze.tm:make_tm
+   commit_veto = some.package:myfunction
+
+ ``myfunction`` should take three args: environ, status, headers and
+ should return True if the txn should be aborted, False if it should
+ be committed.
+
 repoze.tm2 1.0a2 (2008/7/15)
 
  Provide "commit_veto" hook point (contributed by Alberto Valverde).
