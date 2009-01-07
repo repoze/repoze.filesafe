@@ -78,8 +78,8 @@ Adding :mod:`repoze.tm` To Your WSGI Pipeline
 Via ``PasteDeploy`` .INI configuration::
 
   [pipeline:main]
-  pipeline =
-           egg:repoze.tm#tm
+   pipeline =
+           egg:repoze.tm2#tm
            myapp
 
 Via Python:
