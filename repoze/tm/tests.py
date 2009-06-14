@@ -152,6 +152,12 @@ class TestAfterEnd(unittest.TestCase):
         registry.unregister(func, txn)
         self.assertEqual(getattr(txn, registry.key), [None])
 
+    def test_unregister_funcs_is_None(self):
+        registry = self._makeOne()
+        func = lambda *x: None
+        txn = DummyTransaction()
+        self.assertEqual(registry.unregister(func, txn), None)
+
 class UtilityFunctionTests(unittest.TestCase):
     def test_isActive(self):
         from repoze.tm import ekey
