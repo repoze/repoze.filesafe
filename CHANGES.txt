@@ -1,6 +1,11 @@
 Next release
 ============
 
+- Don't commit after aborting if the transaction was doomed or if the
+  commit veto aborted.
+
+- Don't use "real" transaction module in tests.
+
 - 100% test coverage.
 
 1.0a4 (2009/1/6)

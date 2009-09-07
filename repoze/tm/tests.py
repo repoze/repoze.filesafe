@@ -1,6 +1,4 @@
 import unittest
-import sys
-import transaction
 
 class TestTM(unittest.TestCase):
     def _getTargetClass(self):
@@ -16,49 +14,52 @@ class TestTM(unittest.TestCase):
     def test_ekey_inserted(self):
         app = DummyApplication()
         tm = self._makeOne(app)
+        tm.transaction = DummyTransactionModule()
         from repoze.tm import ekey
         env = {}
         tm(env, self._start_response)
         self.failUnless(ekey in env)
 
     def test_committed(self):
-        resource = DummyResource()
-        app = DummyApplication(resource)
+        app = DummyApplication()
         tm = self._makeOne(app)
+        transaction = DummyTransactionModule()
+        tm.transaction = transaction
         result = tm({}, self._start_response)
         self.assertEqual(result, ['hello'])
-        self.assertEqual(resource.committed, True)
-        self.assertEqual(resource.aborted, False)
+        self.assertEqual(transaction.committed, True)
+        self.assertEqual(transaction.aborted, False)
 
     def test_aborted_via_doom(self):
-        resource = DummyResource()
-        app = DummyApplication(resource, doom=True)
+        app = DummyApplication()
         tm = self._makeOne(app)
+        transaction = DummyTransactionModule(doom=True)
+        tm.transaction = transaction
         result = tm({}, self._start_response)
         self.assertEqual(result, ['hello'])
-        self.assertEqual(transaction.isDoomed(), False)
-        self.assertEqual(resource.committed, False)
-        self.assertEqual(resource.aborted, True)
+        self.assertEqual(transaction.committed, False)
+        self.assertEqual(transaction.aborted, True)
 
     def test_aborted_via_exception(self):
-        resource = DummyResource()
-        app = DummyApplication(resource, exception=True)
+        app = DummyApplication(exception=True)
         tm = self._makeOne(app)
+        transaction = DummyTransactionModule()
+        tm.transaction = transaction
         self.assertRaises(ValueError, tm, {}, self._start_response)
-        self.assertEqual(resource.committed, False)
-        self.assertEqual(resource.aborted, True)
+        self.assertEqual(transaction.committed, False)
+        self.assertEqual(transaction.aborted, True)
         
     def test_aborted_via_exception_and_doom(self):
-        resource = DummyResource()
-        app = DummyApplication(resource, exception=True, doom=True)
+        app = DummyApplication(exception=True)
         tm = self._makeOne(app)
+        transaction = DummyTransactionModule(doom=True)
+        tm.transaction = transaction
         self.assertRaises(ValueError, tm, {}, self._start_response)
-        self.assertEqual(resource.committed, False)
-        self.assertEqual(resource.aborted, True)
+        self.assertEqual(transaction.committed, False)
+        self.assertEqual(transaction.aborted, True)
 
     def test_aborted_via_commit_veto(self):
-        resource = DummyResource()
-        app = DummyApplication(resource, status="403 Forbidden")
+        app = DummyApplication(status="403 Forbidden")
         def commit_veto(environ, status, headers):
             self.failUnless(isinstance(environ, dict),
                             "environ is not passed properly")
@@ -68,56 +69,64 @@ class TestTM(unittest.TestCase):
                             "status is not passed properly")
             return not (200 <= int(status.split()[0]) < 400)
         tm = self._makeOne(app, commit_veto)
+        transaction = DummyTransactionModule()
+        tm.transaction = transaction
         tm({}, self._start_response)
-        self.assertEqual(resource.committed, False)
-        self.assertEqual(resource.aborted, True)
+        self.assertEqual(transaction.committed, False)
+        self.assertEqual(transaction.aborted, True)
 
     def test_committed_via_commit_veto_exception(self):
-        resource = DummyResource()
-        app = DummyApplication(resource, status="403 Forbidden")
+        app = DummyApplication(status="403 Forbidden")
         def commit_veto(environ, status, headers):
             return None
         tm = self._makeOne(app, commit_veto)
+        transaction = DummyTransactionModule()
+        tm.transaction = transaction
         tm({}, self._start_response)
-        self.assertEqual(resource.committed, True)
-        self.assertEqual(resource.aborted, False)
+        self.assertEqual(transaction.committed, True)
+        self.assertEqual(transaction.aborted, False)
 
     def test_aborted_via_commit_veto_exception(self):
-        resource = DummyResource()
-        app = DummyApplication(resource, status="403 Forbidden")
+        app = DummyApplication(status="403 Forbidden")
         def commit_veto(environ, status, headers):
             raise ValueError('foo')
         tm = self._makeOne(app, commit_veto)
+        transaction = DummyTransactionModule()
+        tm.transaction = transaction
         self.assertRaises(ValueError, tm, {}, self._start_response)
-        self.assertEqual(resource.committed, False)
-        self.assertEqual(resource.aborted, True)
+        self.assertEqual(transaction.committed, False)
+        self.assertEqual(transaction.aborted, True)
 
     def test_cleanup_on_commit(self):
+        from repoze.tm import after_end
         dummycalled = []
         def dummy():
             dummycalled.append(True)
         env = {}
-        resource = DummyResource()
-        app = DummyApplication(resource, exception=False, doom=False,
-                               register=dummy)
+        app = DummyApplication()
         tm = self._makeOne(app)
+        transaction = DummyTransactionModule()
+        setattr(transaction, after_end.key, [dummy])
+        tm.transaction = transaction
         tm(env, self._start_response)
-        self.assertEqual(resource.committed, True)
-        self.assertEqual(resource.aborted, False)
+        self.assertEqual(transaction.committed, True)
+        self.assertEqual(transaction.aborted, False)
         self.assertEqual(dummycalled, [True])
         
     def test_cleanup_on_abort(self):
+        from repoze.tm import after_end
         dummycalled = []
         def dummy():
             dummycalled.append(True)
         env = {}
-        resource = DummyResource()
-        app = DummyApplication(resource, exception=True, doom=False,
-                               register=dummy)
+        app = DummyApplication(exception=True)
         tm = self._makeOne(app)
+        transaction = DummyTransactionModule()
+        setattr(transaction, after_end.key, [dummy])
+        tm.transaction = transaction
         self.assertRaises(ValueError, tm, env, self._start_response)
-        self.assertEqual(resource.committed, False)
-        self.assertEqual(resource.aborted, True)
+        self.assertEqual(transaction.committed, False)
+        self.assertEqual(transaction.aborted, True)
         self.assertEqual(dummycalled, [True])
 
 class TestAfterEnd(unittest.TestCase):
@@ -131,14 +140,14 @@ class TestAfterEnd(unittest.TestCase):
     def test_register(self):
         registry = self._makeOne()
         func = lambda *x: None
-        txn = DummyTransaction()
+        txn = Dummy()
         registry.register(func, txn)
         self.assertEqual(getattr(txn, registry.key), [func])
 
     def test_unregister_exists(self):
         registry = self._makeOne()
         func = lambda *x: None
-        txn = DummyTransaction()
+        txn = Dummy()
         registry.register(func, txn)
         self.assertEqual(getattr(txn, registry.key), [func])
         registry.unregister(func, txn)
@@ -147,7 +156,7 @@ class TestAfterEnd(unittest.TestCase):
     def test_unregister_notexists(self):
         registry = self._makeOne()
         func = lambda *x: None
-        txn = DummyTransaction()
+        txn = Dummy()
         setattr(txn, registry.key, [None])
         registry.unregister(func, txn)
         self.assertEqual(getattr(txn, registry.key), [None])
@@ -155,7 +164,7 @@ class TestAfterEnd(unittest.TestCase):
     def test_unregister_funcs_is_None(self):
         registry = self._makeOne()
         func = lambda *x: None
-        txn = DummyTransaction()
+        txn = Dummy()
         self.assertEqual(registry.unregister(func, txn), None)
 
 class UtilityFunctionTests(unittest.TestCase):
@@ -179,49 +188,39 @@ class TestMakeTM(unittest.TestCase):
 def fakeveto(environ, status, headers):
     pass
 
-class DummyTransaction:
+class DummyTransactionModule:
+    begun = False
+    committed = False
+    aborted = False
+    def __init__(self, doom=False):
+        self.doom = doom
+
+    def begin(self):
+        self.begun = True
+
+    def get(self):
+        return self
+
+    def commit(self):
+        self.committed = True
+
+    def abort(self):
+        self.aborted = True
+
+    def isDoomed(self):
+        return self.doom
+
+class Dummy:
     pass
 
 class DummyApplication:
-    def __init__(self, resource=None, doom=False, exception=False,
-                 register=None, status="200 OK"):
-        self.resource = resource
-        self.doom = doom
+    def __init__(self, exception=False, status="200 OK"):
         self.exception = exception
-        self.register = register
         self.status = status
         
     def __call__(self, environ, start_response):
         start_response(self.status, [], None)
-        t = transaction.get()
-        if self.resource:
-            t.join(self.resource)
-        if self.register:
-            from repoze.tm import after_end
-            after_end.register(self.register, t)
-        if self.doom:
-            t.doom()
         if self.exception:
             raise ValueError('raising')
         return ['hello']
 
-class DummyResource:
-    committed = False
-    aborted = False
-    
-    def sortKey(self):
-        return 1
-
-    tpc_finish = tpc_abort = tpc_vote = tpc_begin = lambda *arg: None
-
-    def commit(self, txn):
-        self.committed = True
-
-    def abort(self, txn):
-        self.aborted = True
-
-def test_suite():
-    return unittest.findTestCases(sys.modules[__name__])
-
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')
