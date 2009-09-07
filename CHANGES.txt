@@ -1,5 +1,5 @@
-Next release
-============
+1.0a5 (2009/9/7)
+================
 
 - Don't commit after aborting if the transaction was doomed or if the
   commit veto aborted.
