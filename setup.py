@@ -1,3 +1,6 @@
+from ez_setup import use_setuptools
+use_setuptools()
+
 __version__ = '1.0dev'
 
 import os
