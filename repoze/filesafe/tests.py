@@ -1,226 +1,117 @@
+import os.path
+import shutil
+import tempfile
 import unittest
+from repoze.filesafe.manager import FileSafeDataManager
 
-class TestTM(unittest.TestCase):
-    def _getTargetClass(self):
-        from repoze.tm import TM
-        return TM
+class FileSafeDataManagerTests(unittest.TestCase):
+    def setUp(self):
+        self.tempdir=tempfile.mkdtemp()
 
-    def _start_response(self, status, headers, exc_info=None):
-        pass
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
 
-    def _makeOne(self, app, commit_veto=None):
-        return self._getTargetClass()(app, commit_veto)
+    def testCreateFile(self):
+        dm=FileSafeDataManager(self.tempdir)
+        newfile=dm.createFile("tst", "w")
+        self.assertEqual(dm.vault.keys(), ["tst"])
+        self.failUnless(callable(newfile.read))
+        self.failUnless(callable(newfile.write))
 
-    def test_ekey_inserted(self):
-        app = DummyApplication()
-        tm = self._makeOne(app)
-        tm.transaction = DummyTransactionModule()
-        from repoze.tm import ekey
-        env = {}
-        tm(env, self._start_response)
-        self.failUnless(ekey in env)
+    def testCanNotCreateFileTwice(self):
+        dm=FileSafeDataManager(self.tempdir)
+        dm.createFile("tst", "w")
+        self.assertRaises(ValueError, dm.createFile, "tst", "w")
 
-    def test_committed(self):
-        app = DummyApplication()
-        tm = self._makeOne(app)
-        transaction = DummyTransactionModule()
-        tm.transaction = transaction
-        result = tm({}, self._start_response)
-        self.assertEqual(result, ['hello'])
-        self.assertEqual(transaction.committed, True)
-        self.assertEqual(transaction.aborted, False)
+    def testCommitWithoutOriginal(self):
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        newfile=dm.createFile(target, "w")
+        newfile.write("Hello, World!")
+        newfile.close()
+        dm.commit(None)
+        self.assertEqual(dm.in_commit, True)
+        self.assertEqual(dm.vault[target]["moved"], True)
+        self.assertEqual(dm.vault[target]["has_original"], False)
+        self.assertEqual(os.path.exists(dm.vault[target]["tempfile"]), False)
+        self.assertEqual(os.path.exists(target), True)
+        self.assertEqual(open(target).read(), "Hello, World!")
 
-    def test_aborted_via_doom(self):
-        app = DummyApplication()
-        tm = self._makeOne(app)
-        transaction = DummyTransactionModule(doom=True)
-        tm.transaction = transaction
-        result = tm({}, self._start_response)
-        self.assertEqual(result, ['hello'])
-        self.assertEqual(transaction.committed, False)
-        self.assertEqual(transaction.aborted, True)
+    def testCommitWithOriginal(self):
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        oldfile=open(target, "w")
+        oldfile.write("...---...")
+        oldfile.close()
+        newfile=dm.createFile(target, "w")
+        newfile.write("Hello, World!")
+        newfile.close()
+        dm.commit(None)
+        self.assertEqual(dm.in_commit, True)
+        self.assertEqual(dm.vault[target]["moved"], True)
+        self.assertEqual(dm.vault[target]["has_original"], True)
+        self.assertEqual(open(target).read(), "Hello, World!")
+        self.assertEqual(os.path.exists("%s.filesafe" % target), True)
 
-    def test_aborted_via_exception(self):
-        app = DummyApplication(exception=True)
-        tm = self._makeOne(app)
-        transaction = DummyTransactionModule()
-        tm.transaction = transaction
-        self.assertRaises(ValueError, tm, {}, self._start_response)
-        self.assertEqual(transaction.committed, False)
-        self.assertEqual(transaction.aborted, True)
-        
-    def test_aborted_via_exception_and_doom(self):
-        app = DummyApplication(exception=True)
-        tm = self._makeOne(app)
-        transaction = DummyTransactionModule(doom=True)
-        tm.transaction = transaction
-        self.assertRaises(ValueError, tm, {}, self._start_response)
-        self.assertEqual(transaction.committed, False)
-        self.assertEqual(transaction.aborted, True)
+    def testFinishWithoutOriginals(self):
+        dm=FileSafeDataManager(self.tempdir)
+        dm.vault=dict(one={}, two={})
+        dm.tpc_finish(None)
+        self.assertEqual(dm.vault, {})
+        self.assertEqual(dm.in_commit, False)
 
-    def test_aborted_via_commit_veto(self):
-        app = DummyApplication(status="403 Forbidden")
-        def commit_veto(environ, status, headers):
-            self.failUnless(isinstance(environ, dict),
-                            "environ is not passed properly")
-            self.failUnless(isinstance(headers, list),
-                            "headers are not passed properly")
-            self.failUnless(isinstance(status, str),
-                            "status is not passed properly")
-            return not (200 <= int(status.split()[0]) < 400)
-        tm = self._makeOne(app, commit_veto)
-        transaction = DummyTransactionModule()
-        tm.transaction = transaction
-        tm({}, self._start_response)
-        self.assertEqual(transaction.committed, False)
-        self.assertEqual(transaction.aborted, True)
+    def testFinishWithOriginal(self):
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        open("%s.filesafe" % target, "w").close()
+        dm.vault={target: dict(has_original=True)}
+        dm.tpc_finish(None)
+        self.assertEqual(os.path.exists("%s.filesafe" % target), False)
 
-    def test_committed_via_commit_veto_exception(self):
-        app = DummyApplication(status="403 Forbidden")
-        def commit_veto(environ, status, headers):
-            return None
-        tm = self._makeOne(app, commit_veto)
-        transaction = DummyTransactionModule()
-        tm.transaction = transaction
-        tm({}, self._start_response)
-        self.assertEqual(transaction.committed, True)
-        self.assertEqual(transaction.aborted, False)
+    def testFinishWithMissingOriginal(self):
+        # Corner case: original was removed by someone else
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        dm.vault={target: dict(has_original=True)}
+        dm.tpc_finish(None)
 
-    def test_aborted_via_commit_veto_exception(self):
-        app = DummyApplication(status="403 Forbidden")
-        def commit_veto(environ, status, headers):
-            raise ValueError('foo')
-        tm = self._makeOne(app, commit_veto)
-        transaction = DummyTransactionModule()
-        tm.transaction = transaction
-        self.assertRaises(ValueError, tm, {}, self._start_response)
-        self.assertEqual(transaction.committed, False)
-        self.assertEqual(transaction.aborted, True)
+    def testAbortWithMovedFile(self):
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        open(target, "w").close()
+        dm.vault={target: dict(has_original=False, moved=True)}
+        dm.tpc_abort(None)
+        self.assertEqual(os.path.exists(target), False)
 
-    def test_cleanup_on_commit(self):
-        from repoze.tm import after_end
-        dummycalled = []
-        def dummy():
-            dummycalled.append(True)
-        env = {}
-        app = DummyApplication()
-        tm = self._makeOne(app)
-        transaction = DummyTransactionModule()
-        setattr(transaction, after_end.key, [dummy])
-        tm.transaction = transaction
-        tm(env, self._start_response)
-        self.assertEqual(transaction.committed, True)
-        self.assertEqual(transaction.aborted, False)
-        self.assertEqual(dummycalled, [True])
-        
-    def test_cleanup_on_abort(self):
-        from repoze.tm import after_end
-        dummycalled = []
-        def dummy():
-            dummycalled.append(True)
-        env = {}
-        app = DummyApplication(exception=True)
-        tm = self._makeOne(app)
-        transaction = DummyTransactionModule()
-        setattr(transaction, after_end.key, [dummy])
-        tm.transaction = transaction
-        self.assertRaises(ValueError, tm, env, self._start_response)
-        self.assertEqual(transaction.committed, False)
-        self.assertEqual(transaction.aborted, True)
-        self.assertEqual(dummycalled, [True])
+    def testAbortWithMovedFileWithOriginal(self):
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        open(target, "w").close()
+        targetsafe=target+".filesafe"
+        f=open(targetsafe, "w")
+        f.write("...---...")
+        f.close()
+        dm.vault={target: dict(has_original=True, moved=True)}
+        dm.tpc_abort(None)
+        self.assertEqual(os.path.exists(target), True)
+        self.assertEqual(os.path.exists(targetsafe), False)
+        self.assertEqual(open(target).read(), "...---...")
 
-class TestAfterEnd(unittest.TestCase):
-    def _getTargetClass(self):
-        from repoze.tm import AfterEnd
-        return AfterEnd
+    def testAbortWithUnmovedFile(self):
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        open(target, "w").close()
+        dm.vault={"bogus": dict(moved=False, tempfile=target)}
+        dm.tpc_abort(None)
+        self.assertEqual(os.path.exists(target), False)
 
-    def _makeOne(self):
-        return self._getTargetClass()()
+    def testAbortWithUnmovedFileWhichDisappeared(self):
+        # Corner case: temporary file disappeared
+        dm=FileSafeDataManager(self.tempdir)
+        target=os.path.join(self.tempdir, "greeting")
+        dm.vault={"bogus": dict(moved=False, tempfile=target)}
+        dm.tpc_abort(None)
 
-    def test_register(self):
-        registry = self._makeOne()
-        func = lambda *x: None
-        txn = Dummy()
-        registry.register(func, txn)
-        self.assertEqual(getattr(txn, registry.key), [func])
 
-    def test_unregister_exists(self):
-        registry = self._makeOne()
-        func = lambda *x: None
-        txn = Dummy()
-        registry.register(func, txn)
-        self.assertEqual(getattr(txn, registry.key), [func])
-        registry.unregister(func, txn)
-        self.failIf(hasattr(txn, registry.key))
-        
-    def test_unregister_notexists(self):
-        registry = self._makeOne()
-        func = lambda *x: None
-        txn = Dummy()
-        setattr(txn, registry.key, [None])
-        registry.unregister(func, txn)
-        self.assertEqual(getattr(txn, registry.key), [None])
 
-    def test_unregister_funcs_is_None(self):
-        registry = self._makeOne()
-        func = lambda *x: None
-        txn = Dummy()
-        self.assertEqual(registry.unregister(func, txn), None)
-
-class UtilityFunctionTests(unittest.TestCase):
-    def test_isActive(self):
-        from repoze.tm import ekey
-        from repoze.tm import isActive
-        self.assertEqual(isActive({ekey:True}), True)
-        self.assertEqual(isActive({}), False)
-
-class TestMakeTM(unittest.TestCase):
-    def test_make_tm_withveto(self):
-        from repoze.tm import make_tm
-        tm = make_tm(DummyApplication(), {}, 'repoze.tm.tests:fakeveto')
-        self.assertEqual(tm.commit_veto, fakeveto)
-
-    def test_make_tm_noveto(self):
-        from repoze.tm import make_tm
-        tm = make_tm(DummyApplication(), {}, None)
-        self.assertEqual(tm.commit_veto, None)
-
-def fakeveto(environ, status, headers):
-    pass
-
-class DummyTransactionModule:
-    begun = False
-    committed = False
-    aborted = False
-    def __init__(self, doom=False):
-        self.doom = doom
-
-    def begin(self):
-        self.begun = True
-
-    def get(self):
-        return self
-
-    def commit(self):
-        self.committed = True
-
-    def abort(self):
-        self.aborted = True
-
-    def isDoomed(self):
-        return self.doom
-
-class Dummy:
-    pass
-
-class DummyApplication:
-    def __init__(self, exception=False, status="200 OK"):
-        self.exception = exception
-        self.status = status
-        
-    def __call__(self, environ, start_response):
-        start_response(self.status, [], None)
-        if self.exception:
-            raise ValueError('raising')
-        return ['hello']
 
