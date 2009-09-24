@@ -1,4 +1,4 @@
-__version__ = '1.0a6dev'
+__version__ = '1.0dev'
 
 import os
 from setuptools import setup, find_packages
@@ -7,20 +7,18 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
-setup(name='repoze.tm2',
+setup(name='repoze.filesafe',
       version=__version__,
-      description='Zope-like transaction manager via WSGI middleware',
+      description='Transaction-aware file creation',
       long_description=README + "\n\n" + CHANGES,
       classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Programming Language :: Python",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: WSGI",
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware",
         ],
-      keywords='web application server wsgi zope repoze',
-      author="Agendaless Consulting",
+      keywords='transaction wsgi repoze',
+      author="Wichert Akkerman",
       author_email="repoze-dev@lists.repoze.org",
       url="http://www.repoze.org",
       license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
@@ -29,11 +27,10 @@ setup(name='repoze.tm2',
       namespace_packages=['repoze'],
       zip_safe=False,
       install_requires=['transaction'],
-      tests_require=['transaction'],
-      test_suite = "repoze.tm.tests",
+      test_suite = "repoze.filesafe.tests",
       entry_points="""
       [paste.filter_app_factory]
-      tm = repoze.tm:make_tm
+      filesafe = repoze.filesafe:make_filesafe
       """,
       )
 
