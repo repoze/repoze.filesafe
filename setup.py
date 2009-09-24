@@ -29,8 +29,11 @@ setup(name='repoze.filesafe',
       install_requires=['transaction'],
       test_suite = "repoze.filesafe.tests",
       entry_points="""
+      [paste.filter_factory]
+      filesafe = repoze.filesafe:filesafe_filter_factory
+
       [paste.filter_app_factory]
-      filesafe = repoze.filesafe:make_filesafe
+      filesafe = repoze.filesafe:filesafe_filter_app_factory
       """,
       )
 
