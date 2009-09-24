@@ -29,7 +29,7 @@ setup(name='repoze.filesafe',
       include_package_data=True,
       namespace_packages=['repoze'],
       zip_safe=False,
-      install_requires=['transaction'],
+      install_requires=['transaction', 'setuptools'],
       test_suite = "repoze.filesafe.tests",
       entry_points="""
       [paste.filter_factory]
