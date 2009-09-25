@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# repoze.tm documentation build configuration file
+# repoze.filesafe documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its containing
 # dir.
@@ -47,8 +47,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General substitutions.
-project = 'repoze.tm'
-copyright = '2008, Repoze Developers <repoze-dev@lists.repoze.org>'
+project = 'repoze.filesafe'
+copyright = '2009, Repoze Developers <repoze-dev@lists.repoze.org>'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -174,7 +174,7 @@ htmlhelp_basename = 'tmdoc'
 # (source start file, target name, title,
 #  author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'tm.tex', 'repoze.tm Documentation',
+  ('index', 'tm.tex', 'repoze.filesafe Documentation',
    'Repoze Developers', 'manual'),
 ]
 
