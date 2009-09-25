@@ -4,10 +4,10 @@ Documentation for repoze.filesafe
 Overview
 --------
 
-:mod:`repoze.filesafe` provides utilities methods to handle creation
-of files on the filesystem safely by integrating with the ``ZODB`` package's
-transaction manager.  It can be used in combination with `repoze.tm`_ (or
-`repoze.tm2`_) for use in WSGI environments.
+:mod:`repoze.filesafe` provides utilities methods to safely handle creation of
+files on the filesystem by integrating with the ``ZODB`` package's transaction
+manager.  It can be used in combination with `repoze.tm`_ (or `repoze.tm2`_)
+for use in WSGI environments.
 
 .. _repoze.tm: http://pypi.python.org/pypi/repoze.tm
 .. _repoze.tm2: http://docs.repoze.org/tm2/
@@ -29,20 +29,21 @@ call:
 
 .. code-block:: python
 
-    from repoze.filesafe import create
+    from repoze.filesafe import createFile
 
-    f=create("/some/path", "rb")
+    f=createFile("/some/path", "rb")
     f.write("Hello, World!")
     f.close()
 
 This will create a new temporary file and write your data to it. Once the
 transaction is commited it will move the file to the path name you specified.
+If the transaction is aborted the temporary file will be removed.
 
-.. note::
-
-  The :mod:`repoze.filesafe` middleware has to be in the WSGI pipeline. If
-  you use its API without using the middleware any created files will
-  not be moved into place.
+:mod:`repoze.filesafe` assumes that temporary files will be on the same
+filesystem as the target path. The default location is determined by
+the python :mod:`tempfile` module. You may need to configure a different path
+if you use a separate filesystem for `/tmp` using the `TMPDIR` environment
+variable.
 
 
 Adding :mod:`repoze.filesafe` To Your WSGI Pipeline
@@ -51,19 +52,38 @@ Adding :mod:`repoze.filesafe` To Your WSGI Pipeline
 Via ``PasteDeploy`` .INI configuration::
 
   [pipeline:main]
-   pipeline =
-           egg:repoze.tm2#tm
-           myapp
+  pipeline =
+      egg:repoze.tm2#tm
+      myapp
 
-Via Python:
+Or via Python:
 
 .. code-block:: python
 
   from otherplace import mywsgiapp
-
   from repoze.filesafe import FileSafeMiddleware
+
   new_wsgiapp = FileSafeMiddleware(mywsgiapp)
 
+
+Manually integrate with :mod:`transaction`
+------------------------------------------
+
+If you are not using a WSGI environment you will need to create a
+:obj:`FileSafeDataManager` instance and join it to the current transaction:
+
+.. code-block:: python
+
+   import transaction
+   from repoze.filesafe import FileSafeDataManager
+
+   tx=transaction.get()
+   tx.join(FileSafeDataManager())
+
+.. warning:
+
+   :obj:`FileSafeDataManager` is not thread safe. If you use multiple threads
+   make sure to use a separate instance for every thread.
 
 
 Contacting
@@ -87,3 +107,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
