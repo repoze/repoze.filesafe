@@ -5,7 +5,7 @@ from repoze.filesafe.manager import FileSafeDataManager
 
 _local = threading.local()
 
-def createFile(path, mode):
+def createFile(path, mode="w"):
     vault=getattr(_local, "vault", None)
     if vault is None:
         raise RuntimeError("No FileSafeDataManager found")
