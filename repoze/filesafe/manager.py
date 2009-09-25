@@ -7,6 +7,19 @@ from transaction.interfaces import IDataManager
 log = logging.getLogger("repoze.filesafe")
 
 
+class TempFileWrapper(tempfile._TemporaryFileWrapper):
+    """Wrapper for python 2.4 and 2.5 which does not delete temporary files
+    automatically.
+    """
+    def __init__(self, wrapper):
+        self.file=wrapper.file
+        self.name=wrapper.name
+        self.close_called=wrapper.close_called
+
+    def unlink(self, name):
+        pass
+
+
 class FileSafeDataManager:
     implements(IDataManager)
 
@@ -21,8 +34,13 @@ class FileSafeDataManager:
     def createFile(self, path, mode):
         if path in self.vault:
             raise ValueError("%s is already taken", path)
-        file=tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir,
-                delete=False)
+        try:
+            file=tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir,
+                    delete=False)
+        except TypeError:
+            file=tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir)
+            file=TempFileWrapper(file)
+
         self.vault[path]=dict(tempfile=file.name)
         return file
 
