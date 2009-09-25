@@ -7,10 +7,13 @@ Overview
 :mod:`repoze.filesafe` provides utilities methods to safely handle creation of
 files on the filesystem by integrating with the ``ZODB`` package's transaction
 manager.  It can be used in combination with `repoze.tm`_ (or `repoze.tm2`_)
-for use in WSGI environments.
+for use in WSGI environments. More information about using a transaction
+manager can be found in the 
+`Using a Transaction-Aware Data Manager Under repoze.tm`_ article.
 
 .. _repoze.tm: http://pypi.python.org/pypi/repoze.tm
 .. _repoze.tm2: http://docs.repoze.org/tm2/
+.. _Using a Transaction-Aware Data Manager Under repoze.tm: http://repoze.org/tmdemo.html
 
 
 Purpose and Usage
