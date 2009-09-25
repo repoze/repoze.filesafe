@@ -55,7 +55,7 @@ class FileSafeDataManager:
             if info.get("has_original"):
                 try:
                     os.unlink("%s.filesafe" % target)
-                except OSError, e:
+                except OSError:
                     # XXX log.exception makes the testruns die with an exception
                     # in multiprocessing.util:258
                     #log.exception("Failed to remove file backup for %s", target)
