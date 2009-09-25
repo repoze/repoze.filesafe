@@ -80,10 +80,8 @@ If you are not using a WSGI environment you will need to create a
    tx=transaction.get()
    tx.join(FileSafeDataManager())
 
-.. warning:
-
-   :obj:`FileSafeDataManager` is not thread safe. If you use multiple threads
-   make sure to use a separate instance for every thread.
+:obj:`FileSafeDataManager` is not thread safe. If you use multiple threads
+make sure to use a separate instance for every thread.
 
 
 Contacting
