@@ -31,7 +31,7 @@ call:
 
     from repoze.filesafe import createFile
 
-    f=createFile("/some/path", "rb")
+    f=createFile("/some/path", "w")
     f.write("Hello, World!")
     f.close()
 

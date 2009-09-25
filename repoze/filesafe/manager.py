@@ -21,8 +21,15 @@ class FileSafeDataManager:
     def createFile(self, path, mode):
         if path in self.vault:
             raise ValueError("%s is already taken", path)
-        file=tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir,
-                delete=False)
+        try:
+            file=tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir,
+                    delete=False)
+        except TypeError:
+            # Python pre-2.6 does not support the delete option, so play
+            # some tricks to prevent our file from disappearing.
+            file=tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir)
+            file.unlink=lambda x: x
+
         self.vault[path]=dict(tempfile=file.name)
         return file
 

@@ -1,7 +1,7 @@
 from ez_setup import use_setuptools
 use_setuptools()
 
-__version__ = '1.0dev'
+__version__ = '1.0a2'
 
 import os
 from setuptools import setup, find_packages
@@ -23,7 +23,7 @@ setup(name='repoze.filesafe',
       keywords='transaction wsgi repoze',
       author="Wichert Akkerman",
       author_email="repoze-dev@lists.repoze.org",
-      url="http://www.repoze.org",
+      url="http://docs.repoze.org/filesafe/",
       license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
       packages=find_packages(),
       include_package_data=True,
