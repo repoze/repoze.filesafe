@@ -33,7 +33,7 @@ def cleanupDummyDataManager():
     """
     import repoze.filesafe
     vault=getattr(repoze.filesafe._local, "vault", None)
-    if isinstance(value, DummyDataManager):
+    if isinstance(vault, DummyDataManager):
         del repoze.filesafe._local.vault
     return vault
 
