@@ -49,6 +49,16 @@ if you use a separate filesystem for `/tmp` using the `TMPDIR` environment
 variable.
 
 
+Unit tests
+----------
+:mod:`repoze.filesafe.testing` provides several utility methods to facilitate
+unit testing of code which uses :mod:`repoze.filesafe`:
+
+.. autofunction:: repoze.filesafe.testing.setupDummyDataManager
+
+.. autofunction:: repoze.filesafe.testing.cleanupDummyDataManager
+
+
 Adding :mod:`repoze.filesafe` To Your WSGI Pipeline
 ---------------------------------------------------
 

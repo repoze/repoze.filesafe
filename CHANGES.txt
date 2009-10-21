@@ -1,3 +1,9 @@
+1.0a3
+-----
+
+- Add method to facilitate unit testing of code using repoze.filesafe.
+  [wichert]
+
 1.0a2
 -----
 
