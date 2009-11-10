@@ -1,7 +1,7 @@
 from ez_setup import use_setuptools
 use_setuptools()
 
-__version__ = '1.0dev'
+__version__ = '1.0a3'
 
 import os
 from setuptools import setup, find_packages
