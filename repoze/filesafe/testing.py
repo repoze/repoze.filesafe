@@ -13,6 +13,12 @@ class DummyDataManager:
         self.data[path]=file=StringIO()
         return file
 
+    def openFile(self, path, mode="r"):
+        if path in self.data:
+            return self.data[path]
+        else:
+            return open(path, mode)
+
 
 
 def setupDummyDataManager():

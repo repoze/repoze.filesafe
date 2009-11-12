@@ -12,6 +12,13 @@ def createFile(path, mode="w"):
     return vault.createFile(path, mode)
 
 
+def openFile(path, mode="r"):
+    vault=getattr(_local, "vault", None)
+    if vault is None:
+        raise RuntimeError("No FileSafeDataManager found")
+    return vault.openFile(path, mode)
+
+
 class FileSafeMiddleware(object):
     def __init__(self, app, config=None, **kwargs):
         self.app=app

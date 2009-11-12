@@ -49,6 +49,28 @@ if you use a separate filesystem for `/tmp` using the `TMPDIR` environment
 variable.
 
 
+It is possible to (re)open a file that has not been been commited yet using
+the `openFile` method:
+
+.. code-block:: python
+
+    from repoze.filesafe import createFile, openFile
+
+    f=createFile("/some/path", "w")
+    f.write("Hello, World!")
+    f.close()
+
+    f=openFile("/some/path")
+    print f.read()
+    f.close()
+
+This will print the greeting that was stored in the file. If `openFile` is
+called with a path that has not been created using `createFile` in the current
+transaction it will be opened normally, as if the standard `open` method was
+used.
+
+
+
 Unit tests
 ----------
 :mod:`repoze.filesafe.testing` provides several utility methods to facilitate

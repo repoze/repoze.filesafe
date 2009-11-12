@@ -1,3 +1,11 @@
+1.0a4
+-----
+
+- Add a new openFile method to facilitate opening of files that have not been
+  commited yet.
+  [wichert]
+
+
 1.0a3
 -----
 

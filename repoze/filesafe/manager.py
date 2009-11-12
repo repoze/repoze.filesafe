@@ -34,6 +34,13 @@ class FileSafeDataManager:
         return file
 
 
+    def openFile(self, path, mode="r")
+        if path in self.vault:
+            return open(self.vault[path]["tempfile"], mode)
+        else:
+            return open(path, mode)
+
+
     def tpc_begin(self, transaction):
         pass
 
