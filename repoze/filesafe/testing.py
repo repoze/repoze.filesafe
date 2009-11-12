@@ -1,6 +1,13 @@
-from cStringIO import StringIO
+from StringIO import StringIO
 from zope.interface import implements
 from transaction.interfaces import IDataManager
+
+
+class MockFile(StringIO):
+    def close(self):
+        self.mockdata = self.getvalue()
+        return StringIO.close(self)
+
 
 class DummyDataManager:
     implements(IDataManager)
@@ -10,12 +17,16 @@ class DummyDataManager:
         self.data={}
 
     def createFile(self, path, mode):
-        self.data[path]=file=StringIO()
+        self.data[path]=file=MockFile()
         return file
 
     def openFile(self, path, mode="r"):
         if path in self.data:
-            return self.data[path]
+            file = self.data[path]
+            if file.closed:
+                return MockFile(file.mockdata)
+            else:
+                return file
         else:
             return open(path, mode)
 
