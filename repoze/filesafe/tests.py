@@ -112,6 +112,20 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm.vault={"bogus": dict(moved=False, tempfile=target)}
         dm.tpc_abort(None)
 
+    def testOpenFileInVault(self):
+        dm=FileSafeDataManager(self.tempdir)
+        f=dm.createFile("dummy", "w")
+        f.write("Hello!")
+        f.close()
+        f=dm.openFile("dummy")
+        self.assertEqual(f.read(), "Hello!")
+        f.close()
+
+    def testOpenFileOutsideVault(self):
+        dm=FileSafeDataManager(self.tempdir)
+        f=dm.openFile(__file__)
+        self.failUnless("testOpenFileInVault" in f.read())
+        f.close()
 
 
 
