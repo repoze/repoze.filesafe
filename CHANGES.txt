@@ -1,3 +1,9 @@
+1.0a6
+-----
+
+- Fix packaging error.
+  [wichert]
+
 1.0a5
 -----
 
