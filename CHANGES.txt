@@ -1,7 +1,15 @@
+1.0a6
+-----
+
+- Fix packaging error.
+  [wichert]
+
 1.0a5
 -----
 
-- .....
+- Add a MockFile class to help with handling of files when using the
+  DummyDataManager.
+  [fschulze]
 
 
 1.0a4
