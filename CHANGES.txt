@@ -1,7 +1,9 @@
 1.0a5
 -----
 
-- .....
+- Add a MockFile class to help with handling of files when using the
+  DummyDataManager.
+  [fschulze]
 
 
 1.0a4
