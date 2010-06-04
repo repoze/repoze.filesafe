@@ -3,28 +3,42 @@ import shutil
 import tempfile
 import unittest
 from repoze.filesafe.manager import FileSafeDataManager
+from repoze.filesafe.testing import DummyDataManager, MockFile
+
 
 class FileSafeDataManagerTests(unittest.TestCase):
+    DM = FileSafeDataManager
+
+    def exists(self, path):
+        return os.path.exists(path)
+
+    def open(self, path, mode=None):
+        if mode is None:
+            return open(path)
+        else:
+            return open(path, mode)
+
     def setUp(self):
         self.tempdir=tempfile.mkdtemp()
+        self.dm = self.DM(self.tempdir)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
     def testCreateFile(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         newfile=dm.createFile("tst", "w")
         self.assertEqual(dm.vault.keys(), ["tst"])
         self.failUnless(callable(newfile.read))
         self.failUnless(callable(newfile.write))
 
     def testCanNotCreateFileTwice(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         dm.createFile("tst", "w")
         self.assertRaises(ValueError, dm.createFile, "tst", "w")
 
     def testCommitWithoutOriginal(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         target=os.path.join(self.tempdir, "greeting")
         newfile=dm.createFile(target, "w")
         newfile.write("Hello, World!")
@@ -33,14 +47,14 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(dm.in_commit, True)
         self.assertEqual(dm.vault[target]["moved"], True)
         self.assertEqual(dm.vault[target]["has_original"], False)
-        self.assertEqual(os.path.exists(dm.vault[target]["tempfile"]), False)
-        self.assertEqual(os.path.exists(target), True)
-        self.assertEqual(open(target).read(), "Hello, World!")
+        self.assertEqual(self.exists(dm.vault[target]["tempfile"]), False)
+        self.assertEqual(self.exists(target), True)
+        self.assertEqual(self.open(target).read(), "Hello, World!")
 
     def testCommitWithOriginal(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         target=os.path.join(self.tempdir, "greeting")
-        oldfile=open(target, "w")
+        oldfile=self.open(target, "w")
         oldfile.write("...---...")
         oldfile.close()
         newfile=dm.createFile(target, "w")
@@ -50,70 +64,70 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(dm.in_commit, True)
         self.assertEqual(dm.vault[target]["moved"], True)
         self.assertEqual(dm.vault[target]["has_original"], True)
-        self.assertEqual(open(target).read(), "Hello, World!")
-        self.assertEqual(os.path.exists("%s.filesafe" % target), True)
+        self.assertEqual(self.open(target).read(), "Hello, World!")
+        self.assertEqual(self.exists("%s.filesafe" % target), True)
 
     def testFinishWithoutOriginals(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         dm.vault=dict(one={}, two={})
         dm.tpc_finish(None)
         self.assertEqual(dm.vault, {})
         self.assertEqual(dm.in_commit, False)
 
     def testFinishWithOriginal(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         target=os.path.join(self.tempdir, "greeting")
-        open("%s.filesafe" % target, "w").close()
+        self.open("%s.filesafe" % target, "w").close()
         dm.vault={target: dict(has_original=True)}
         dm.tpc_finish(None)
-        self.assertEqual(os.path.exists("%s.filesafe" % target), False)
+        self.assertEqual(self.exists("%s.filesafe" % target), False)
 
     def testFinishWithMissingOriginal(self):
+        dm = self.dm
         # Corner case: original was removed by someone else
-        dm=FileSafeDataManager(self.tempdir)
         target=os.path.join(self.tempdir, "greeting")
         dm.vault={target: dict(has_original=True)}
         dm.tpc_finish(None)
 
     def testAbortWithMovedFile(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         target=os.path.join(self.tempdir, "greeting")
-        open(target, "w").close()
+        self.open(target, "w").close()
         dm.vault={target: dict(has_original=False, moved=True)}
         dm.tpc_abort(None)
-        self.assertEqual(os.path.exists(target), False)
+        self.assertEqual(self.exists(target), False)
 
     def testAbortWithMovedFileWithOriginal(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         target=os.path.join(self.tempdir, "greeting")
-        open(target, "w").close()
+        self.open(target, "w").close()
         targetsafe=target+".filesafe"
-        f=open(targetsafe, "w")
+        f=self.open(targetsafe, "w")
         f.write("...---...")
         f.close()
         dm.vault={target: dict(has_original=True, moved=True)}
         dm.tpc_abort(None)
-        self.assertEqual(os.path.exists(target), True)
-        self.assertEqual(os.path.exists(targetsafe), False)
-        self.assertEqual(open(target).read(), "...---...")
+        self.assertEqual(self.exists(target), True)
+        self.assertEqual(self.exists(targetsafe), False)
+        self.assertEqual(self.open(target).read(), "...---...")
 
     def testAbortWithUnmovedFile(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         target=os.path.join(self.tempdir, "greeting")
-        open(target, "w").close()
+        self.open(target, "w").close()
         dm.vault={"bogus": dict(moved=False, tempfile=target)}
         dm.tpc_abort(None)
-        self.assertEqual(os.path.exists(target), False)
+        self.assertEqual(self.exists(target), False)
 
     def testAbortWithUnmovedFileWhichDisappeared(self):
+        dm = self.dm
         # Corner case: temporary file disappeared
-        dm=FileSafeDataManager(self.tempdir)
         target=os.path.join(self.tempdir, "greeting")
         dm.vault={"bogus": dict(moved=False, tempfile=target)}
         dm.tpc_abort(None)
 
     def testOpenFileInVault(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         f=dm.createFile("dummy", "w")
         f.write("Hello!")
         f.close()
@@ -122,10 +136,28 @@ class FileSafeDataManagerTests(unittest.TestCase):
         f.close()
 
     def testOpenFileOutsideVault(self):
-        dm=FileSafeDataManager(self.tempdir)
+        dm = self.dm
         f=dm.openFile(__file__)
         self.failUnless("testOpenFileInVault" in f.read())
         f.close()
 
 
+class DummyDataManagerTests(FileSafeDataManagerTests):
+    DM = DummyDataManager
 
+    def exists(self, path):
+        return path in self.dm.data
+
+    def open(self, path, mode=None):
+        if mode is None or 'r' in mode:
+            return MockFile(self.dm.data[path].mockdata)
+        elif 'w' in mode:
+            f = self.dm.data[path] = MockFile()
+            return f
+
+    def setUp(self):
+        self.tempdir="/dummy"
+        self.dm = self.DM(self.tempdir)
+
+    def tearDown(self):
+        pass

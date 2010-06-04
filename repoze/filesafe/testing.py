@@ -14,22 +14,97 @@ class DummyDataManager:
 
     def __init__(self, tempdir=None):
         self.tempdir=tempdir
+        self.in_commit=False
         self.data={}
+        self.vault={}
 
     def createFile(self, path, mode):
-        self.data[path]=file=MockFile()
+        if path in self.vault:
+            raise ValueError("%s is already taken", path)
+        tmppath = "tmp%s" % path
+        self.data[tmppath]=file=MockFile()
+        self.vault[path]=dict(tempfile=tmppath)
         return file
 
     def openFile(self, path, mode="r"):
-        if path in self.data:
-            file = self.data[path]
+        if path in self.vault:
+            file = self.data[self.vault[path]["tempfile"]]
             if file.closed:
                 return MockFile(file.mockdata)
             else:
                 return file
         else:
-            return open(path, mode)
+            if path not in self.data:
+                return open(path, mode)
+            file = self.data[path]
+            if file.closed:
+                return MockFile(file.mockdata)
+            else:
+                return file
 
+    def tpc_begin(self, transaction):
+        pass
+
+    def commit(self, transaction):
+        self.in_commit=True
+        for target in self.vault:
+            info=self.vault[target]
+            if target in self.data:
+                info["has_original"]=True
+                self.data["%s.filesafe" % target] = self.data[target]
+            else:
+                info["has_original"]=False
+            self.data[target] = self.data[info["tempfile"]]
+            del self.data[info["tempfile"]]
+            info["moved"]=True
+
+    def tpc_vote(self, transaction):
+        pass
+
+    def tpc_finish(self, transaction):
+        for target in self.vault:
+            info=self.vault[target]
+            if info.get("has_original"):
+                try:
+                    del self.data["%s.filesafe" % target]
+                except KeyError:
+                    # XXX log.exception makes the testruns die with an exception
+                    # in multiprocessing.util:258
+                    #log.exception("Failed to remove file backup for %s", target)
+                    pass
+
+        self.vault.clear()
+        self.in_commit=False
+
+    def tpc_abort(self, transaction):
+        for target in self.vault:
+            info=self.vault[target]
+            if info.get("moved"):
+                try:
+                    if info["has_original"]:
+                        oldname = "%s.filesafe" % target
+                        self.data[target] = self.data[oldname]
+                        del self.data[oldname]
+                    else:
+                        del self.data[target]
+                except KeyError:
+                    # XXX log.exception makes the testruns die with an exception
+                    # in multiprocessing.util:258
+                    #log.exception("Failed to restore original file %s", target)
+                    pass
+            else:
+                try:
+                    del self.data[info["tempfile"]]
+                except KeyError:
+                    # XXX log.exception makes the testruns die with an exception
+                    # in multiprocessing.util:258
+                    #log.exception("Failed to delete temporary file %s", target)
+                    pass
+
+        self.vault.clear()
+        self.in_commit=False
+
+    abort = tpc_abort
 
 
 def setupDummyDataManager():

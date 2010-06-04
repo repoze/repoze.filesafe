@@ -1,3 +1,9 @@
+Unreleased
+----------
+
+- Made DummyDataManager transaction aware.
+  [fschulze]
+
 1.0a6
 -----
 
