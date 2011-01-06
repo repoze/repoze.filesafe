@@ -19,6 +19,13 @@ def openFile(path, mode="r"):
     return vault.openFile(path, mode)
 
 
+def deleteFile(path):
+    vault=getattr(_local, "vault", None)
+    if vault is None:
+        raise RuntimeError("No FileSafeDataManager found")
+    return vault.deleteFile(path)
+
+
 class FileSafeMiddleware(object):
     def __init__(self, app, config=None, **kwargs):
         self.app=app

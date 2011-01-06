@@ -20,7 +20,10 @@ class DummyDataManager:
 
     def createFile(self, path, mode):
         if path in self.vault:
-            raise ValueError("%s is already taken", path)
+            if self.vault[path].get('deleted', False):
+                del self.vault[path]
+            else:
+                raise ValueError("%s is already taken", path)
         tmppath = "tmp%s" % path
         self.data[tmppath]=file=MockFile()
         self.vault[path]=dict(tempfile=tmppath)
@@ -28,7 +31,10 @@ class DummyDataManager:
 
     def openFile(self, path, mode="r"):
         if path in self.vault:
-            file = self.data[self.vault[path]["tempfile"]]
+            info = self.vault[path]
+            if info.get('deleted', False):
+                raise IOError("[Errno 2] No such file or directory: '%s'" % path)
+            file = self.data[info["tempfile"]]
             if file.closed:
                 return MockFile(file.mockdata)
             else:
@@ -41,6 +47,16 @@ class DummyDataManager:
                 return MockFile(file.mockdata)
             else:
                 return file
+
+    def deleteFile(self, path):
+        if path in self.vault:
+            info = self.vault[path]
+            if info.get('deleted', False):
+                raise OSError("[Errno 2] No such file or directory: '%s'" % path)
+            del self.data[info["tempfile"]]
+            del self.vault[path]
+        else:
+            self.vault[path] = dict(tempfile=path, deleted=True)
 
     def tpc_begin(self, transaction):
         pass

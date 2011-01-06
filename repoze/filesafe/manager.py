@@ -20,7 +20,10 @@ class FileSafeDataManager:
 
     def createFile(self, path, mode):
         if path in self.vault:
-            raise ValueError("%s is already taken", path)
+            if self.vault[path].get('deleted', False):
+                del self.vault[path]
+            else:
+                raise ValueError("%s is already taken", path)
         try:
             file=tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir,
                     delete=False)
@@ -36,9 +39,29 @@ class FileSafeDataManager:
 
     def openFile(self, path, mode="r"):
         if path in self.vault:
-            return open(self.vault[path]["tempfile"], mode)
+            info=self.vault[path]
+            if info.get('deleted', False):
+                raise IOError("[Errno 2] No such file or directory: '%s'" % path)
+            return open(info["tempfile"], mode)
         else:
             return open(path, mode)
+
+
+    def deleteFile(self, path):
+        if path in self.vault:
+            info=self.vault[path]
+            if info.get('deleted', False):
+                raise OSError("[Errno 2] No such file or directory: '%s'" % path)
+            try:
+                os.unlink(info["tempfile"])
+            except OSError:
+                # XXX log.exception makes the testruns die with an exception
+                # in multiprocessing.util:258
+                #log.exception("Failed to delete temporary file %s", target)
+                pass
+            del self.vault[path]
+        else:
+            self.vault[path]=dict(tempfile=path, deleted=True)
 
 
     def tpc_begin(self, transaction):
@@ -50,13 +73,18 @@ class FileSafeDataManager:
         self.in_commit=True
         for target in self.vault:
             info=self.vault[target]
-            if os.path.exists(target):
+            if info.get("deleted", False):
+                os.rename(target, "%s.filesafe" % target)
                 info["has_original"]=True
-                os.link(target, "%s.filesafe" % target)
+                info["moved"]=True
             else:
-                info["has_original"]=False
-            os.rename(info["tempfile"], target)
-            info["moved"]=True
+                if os.path.exists(target):
+                    info["has_original"]=True
+                    os.link(target, "%s.filesafe" % target)
+                else:
+                    info["has_original"]=False
+                os.rename(info["tempfile"], target)
+                info["moved"]=True
 
 
     def tpc_vote(self, transaction):
@@ -66,7 +94,15 @@ class FileSafeDataManager:
     def tpc_finish(self, transaction):
         for target in self.vault:
             info=self.vault[target]
-            if info.get("has_original"):
+            if info.get("deleted", False):
+                try:
+                    os.unlink("%s.filesafe" % info["tempfile"])
+                except OSError:
+                    # XXX log.exception makes the testruns die with an exception
+                    # in multiprocessing.util:258
+                    #log.exception("Failed to remove file backup for %s", target)
+                    pass
+            elif info.get("has_original"):
                 try:
                     os.unlink("%s.filesafe" % target)
                 except OSError:

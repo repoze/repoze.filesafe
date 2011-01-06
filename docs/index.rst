@@ -70,6 +70,9 @@ transaction it will be opened normally, as if the standard `open` method was
 used.
 
 
+You can also delete files with `deleteFile`.
+
+
 
 Unit tests
 ----------
