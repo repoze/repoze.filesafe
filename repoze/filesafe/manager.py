@@ -61,6 +61,8 @@ class FileSafeDataManager:
                 pass
             del self.vault[path]
         else:
+            if not os.path.exists(path):
+                raise OSError("[Errno 2] No such file or directory: '%s'" % path)
             self.vault[path]=dict(tempfile=path, deleted=True)
 
 
