@@ -1,50 +1,54 @@
-1.1
----
+``repoze.filesafe`` Changelog
+=============================
+
+
+1.1 (2011-01-13)
+----------------
 
 - Added deleteFile function/method.
   [fschulze]
 
-1.0
----
+1.0 (2010-06-29)
+----------------
 
 - Made DummyDataManager transaction aware.
   [fschulze]
 
-1.0a6
------
+1.0a6 (2009-12-09)
+------------------
 
 - Fix packaging error.
   [wichert]
 
-1.0a5
------
+1.0a5 (2009-12-09)
+------------------
 
 - Add a MockFile class to help with handling of files when using the
   DummyDataManager.
   [fschulze]
 
 
-1.0a4
------
+1.0a4 (2009-11-12)
+------------------
 
 - Add a new openFile method to facilitate opening of files that have not been
   commited yet.
   [wichert]
 
 
-1.0a3
------
+1.0a3 (2009-11-10)
+------------------
 
 - Add method to facilitate unit testing of code using repoze.filesafe.
   [wichert]
 
-1.0a2
------
+1.0a2 (2009-09-25)
+------------------
 
 - Add support for Python 2.4 and 2.5. [wichert]
 
 
-1.0a1
------
+1.0a1 (2009-09-25)
+------------------
 
 - Initial Release
