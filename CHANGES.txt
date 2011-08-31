@@ -1,8 +1,8 @@
 Changelog
 =========
 
-2.0 (unreleased)
-----------------
+2.0b1 (2011-08-31)
+------------------
 
 - Remove the need for a middleware. Instead the current transaction is
   automatically joined if needed.

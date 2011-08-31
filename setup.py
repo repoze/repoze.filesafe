@@ -5,7 +5,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
-version = '2.0dev'
+version = '2.0b1'
 
 setup(name='repoze.filesafe',
       version=version,
@@ -14,8 +14,7 @@ setup(name='repoze.filesafe',
       classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Programming Language :: Python",
-        "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware",
+        "Programming Language :: Python :: 2",
         ],
       keywords='transaction wsgi repoze',
       author="Wichert Akkerman",
