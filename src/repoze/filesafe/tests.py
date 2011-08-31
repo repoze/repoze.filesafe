@@ -6,7 +6,7 @@ from repoze.filesafe.manager import FileSafeDataManager
 from repoze.filesafe.testing import DummyDataManager, MockFile
 
 
-class _get_manager_tests(unittest.TestCase):
+class get_manager_tests(unittest.TestCase):
     def _get_manager(self, *a, **kw):
         from repoze.filesafe import _get_manager
         return _get_manager(*a, **kw)
