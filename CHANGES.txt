@@ -1,14 +1,19 @@
 Changelog
 =========
 
-1.2 (unreleased)
+2.0 (unreleased)
 ----------------
+
+- Remove the need for a middleware. Instead the current transaction is
+  automatically joined if needed.
+  [wichert]
 
 - PEP8.
   [wichert]
 
 - Restructure package to faciliate automated testing.
   [wichert]
+
 
 1.1 (2011-01-13)
 ----------------

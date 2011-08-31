@@ -145,7 +145,7 @@ def cleanupDummyDataManager():
     the returned data manager.
     """
     import repoze.filesafe
-    vault = getattr(repoze.filesafe._local, "vault", None)
-    if isinstance(vault, DummyDataManager):
-        del repoze.filesafe._local.vault
-    return vault
+    manager = getattr(repoze.filesafe._local, 'manager', None)
+    if isinstance(manager, DummyDataManager):
+        del repoze.filesafe._local.manager
+    return manager

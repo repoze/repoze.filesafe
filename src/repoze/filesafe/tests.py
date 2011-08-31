@@ -6,6 +6,22 @@ from repoze.filesafe.manager import FileSafeDataManager
 from repoze.filesafe.testing import DummyDataManager, MockFile
 
 
+class _get_manager_tests(unittest.TestCase):
+    def _get_manager(self, *a, **kw):
+        from repoze.filesafe import _get_manager
+        return _get_manager(*a, **kw)
+
+    def test_full_cycle(self):
+        import transaction
+        from repoze.filesafe import _local
+        self.assertTrue(not hasattr(_local, 'manager'))
+        mgr = self._get_manager()
+        self.assertTrue(isinstance(mgr, FileSafeDataManager))
+        self.assertTrue(_local.manager is mgr)
+        transaction.get().abort()
+        self.assertTrue(not hasattr(_local, 'manager'))
+
+
 class FileSafeDataManagerTests(unittest.TestCase):
     DM = FileSafeDataManager
 

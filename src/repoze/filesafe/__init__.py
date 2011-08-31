@@ -1,35 +1,55 @@
 # repoze TransactionManager WSGI middleware
-import transaction
 import threading
+import warnings
+import transaction
 from repoze.filesafe.manager import FileSafeDataManager
 
 _local = threading.local()
 
 
-def createFile(path, mode="w"):
-    vault = getattr(_local, "vault", None)
-    if vault is None:
-        raise RuntimeError("No FileSafeDataManager found")
-    return vault.createFile(path, mode)
+def _remove_manager(*a):
+    try:
+        del _local.manager
+    except AttributeError:
+        pass
+
+def _get_manager():
+    manager = getattr(_local, 'manager', None)
+    if manager is not None:
+        return manager
+
+    manager = _local.manager = FileSafeDataManager()
+    tx = transaction.get()
+    tx.join(manager)
+    tx.addAfterCommitHook(_remove_manager)
+    return manager
 
 
-def openFile(path, mode="r"):
-    vault = getattr(_local, "vault", None)
-    if vault is None:
-        raise RuntimeError("No FileSafeDataManager found")
-    return vault.openFile(path, mode)
+def create_file(path, mode='w'):
+    mgr = _get_manager()
+    return mgr.createFile(path, mode)
 
 
-def deleteFile(path):
-    vault = getattr(_local, "vault", None)
-    if vault is None:
-        raise RuntimeError("No FileSafeDataManager found")
-    return vault.deleteFile(path)
+def open_file(path, mode='r'):
+    mgr = _get_manager()
+    return mgr.openFile(path, mode)
+
+def delete_file(path):
+    mgr = _get_manager()
+    return mgr.deleteFile(path)
+
+
+createFile = create_file
+openFile = open_file
+deleteFile = delete_file
 
 
 class FileSafeMiddleware(object):
     def __init__(self, app, config=None, **kwargs):
         self.app = app
+        warnings.warn('FileSafeMiddleware is no longer required. You can '
+                      'safely remove it.',
+                      DeprecationWarning, stacklevel=2)
 
     def __call__(self, environ, start_response):
         if not hasattr(_local, "vault"):

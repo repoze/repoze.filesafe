@@ -17,6 +17,11 @@ class FileSafeDataManager:
         self.in_commit = False
         self.vault = {}
 
+    def _cleanup(self):
+        from repoze.filesafe import _remove_manager
+        self.vault.clear()
+        _remove_manager()
+
     def createFile(self, path, mode):
         if path in self.vault:
             if self.vault[path].get('deleted', False):
@@ -110,8 +115,8 @@ class FileSafeDataManager:
                     # target)
                     pass
 
-        self.vault.clear()
         self.in_commit = False
+        self._cleanup()
 
     def tpc_abort(self, transaction):
         for target in self.vault:
@@ -138,8 +143,8 @@ class FileSafeDataManager:
                     # target)
                     pass
 
-        self.vault.clear()
         self.in_commit = False
+        self._cleanup()
 
     abort = tpc_abort
 
