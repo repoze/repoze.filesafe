@@ -1,0 +1,4 @@
+include *.rst
+include *.txt
+graft docs
+prune docs/.build
