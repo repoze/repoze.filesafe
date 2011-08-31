@@ -1,5 +1,5 @@
-``repoze.filesafe`` Changelog
-=============================
+Changelog
+=========
 
 1.2 (unreleased)
 ----------------
