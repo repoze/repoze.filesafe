@@ -1,6 +1,11 @@
 ``repoze.filesafe`` Changelog
 =============================
 
+1.2 (unreleased)
+----------------
+
+- Restructure package to faciliate automated testing.
+  [wichert]
 
 1.1 (2011-01-13)
 ----------------

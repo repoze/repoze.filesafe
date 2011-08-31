@@ -125,10 +125,8 @@ make sure to use a separate instance for every thread.
 Contacting
 ----------
 
-The `repoze-dev maillist
-<http://lists.repoze.org/mailman/listinfo/repoze-dev>`_ should be used
-for communications about this software.  Put the overview of the
-purpose of the package here.
+This project is managed as a `github project
+<https://github.com/repoze/repoze.filesafe>`_. 
 
 
 .. toctree::

@@ -25,7 +25,8 @@ setup(name='repoze.filesafe',
       author_email="repoze-dev@lists.repoze.org",
       url="http://docs.repoze.org/filesafe/",
       license="BSD-derived (http://www.repoze.org/LICENSE.txt)",
-      packages=find_packages(),
+      packages=find_packages('src'),
+      package_dir={'': 'src'},
       include_package_data=True,
       namespace_packages=['repoze'],
       zip_safe=False,
@@ -39,4 +40,3 @@ setup(name='repoze.filesafe',
       filesafe = repoze.filesafe:filesafe_filter_app_factory
       """,
       )
-
