@@ -19,6 +19,8 @@ docs: bin/sphinx-build
 
 jenkins: bin/test bin/sphinx-build
 	$(MAKE) -C docs linkcheck
-	bin/coverage run --branch --include='src/repoze/filesafe/*' bin/test --xml
+	bin/coverage run --branch --include='src/repoze/filesafe/*' \
+		bin/nosetests repoze.filesafe --with-xunit
+	bin/coverage xml
 
 .PHONY: all check docs jenkins
