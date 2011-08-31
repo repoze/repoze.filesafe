@@ -32,9 +32,9 @@ call:
 
 .. code-block:: python
 
-    from repoze.filesafe import createFile
+    from repoze.filesafe import create_file
 
-    f=createFile("/some/path", "w")
+    f = create_file("/some/path", "w")
     f.write("Hello, World!")
     f.close()
 
@@ -50,28 +50,26 @@ variable.
 
 
 It is possible to (re)open a file that has not been been commited yet using
-the `openFile` method:
+the `open_file` method:
 
 .. code-block:: python
 
-    from repoze.filesafe import createFile, openFile
+    from repoze.filesafe import create_file, open_file
 
-    f=createFile("/some/path", "w")
+    f = create_file("/some/path", "w")
     f.write("Hello, World!")
     f.close()
 
-    f=openFile("/some/path")
+    f = open_file("/some/path")
     print f.read()
     f.close()
 
-This will print the greeting that was stored in the file. If `openFile` is
-called with a path that has not been created using `createFile` in the current
+This will print the greeting that was stored in the file. If `open_file` is
+called with a path that has not been created using `create_file` in the current
 transaction it will be opened normally, as if the standard `open` method was
 used.
 
-
-You can also delete files with `deleteFile`.
-
+You can also delete files with `delete_file`.
 
 
 Unit tests
@@ -84,42 +82,16 @@ unit testing of code which uses :mod:`repoze.filesafe`:
 .. autofunction:: repoze.filesafe.testing.cleanupDummyDataManager
 
 
-Adding :mod:`repoze.filesafe` To Your WSGI Pipeline
----------------------------------------------------
+Integration :mod:`repoze.filesafe` with transactions
+----------------------------------------------------
 
-Via ``PasteDeploy`` .INI configuration::
+Earlier repoze.filesafe versions required usage of a WSGI middleware or manual
+hooking into the transaction logic. Since repoze.filesafe 2 this is no longer
+required.
 
-  [pipeline:main]
-  pipeline =
-      egg:repoze.tm2#tm
-      myapp
+The WSGI middleware is still available for backwards compatibility, but no
+longer does anything.
 
-Or via Python:
-
-.. code-block:: python
-
-  from otherplace import mywsgiapp
-  from repoze.filesafe import FileSafeMiddleware
-
-  new_wsgiapp = FileSafeMiddleware(mywsgiapp)
-
-
-Manually integrate with :mod:`transaction`
-------------------------------------------
-
-If you are not using a WSGI environment you will need to create a
-:obj:`FileSafeDataManager` instance and join it to the current transaction:
-
-.. code-block:: python
-
-   import transaction
-   from repoze.filesafe import FileSafeDataManager
-
-   tx=transaction.get()
-   tx.join(FileSafeDataManager())
-
-:obj:`FileSafeDataManager` is not thread safe. If you use multiple threads
-make sure to use a separate instance for every thread.
 
 
 Contacting
