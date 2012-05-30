@@ -22,5 +22,6 @@ jenkins: bin/test bin/sphinx-build
 	bin/coverage run --branch --include='src/repoze/filesafe/*' \
 		bin/nosetests repoze.filesafe --with-xunit
 	bin/coverage html
+	bin/coverage xml
 
 .PHONY: all check docs jenkins
