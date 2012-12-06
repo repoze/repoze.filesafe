@@ -9,3 +9,5 @@
 *.pyc
 *.pyo
 *.pt.py
+*.egg
+*.egg-info
