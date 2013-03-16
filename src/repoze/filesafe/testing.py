@@ -135,7 +135,7 @@ def setupDummyDataManager():
     the returned data manager.
     """
     import repoze.filesafe
-    repoze.filesafe._local.vault = mgr = DummyDataManager()
+    repoze.filesafe._local.manager = mgr = DummyDataManager()
     return mgr
 
 
