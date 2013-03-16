@@ -8,6 +8,14 @@ class MockFile(StringIO):
         self.mockdata = self.getvalue()
         return StringIO.close(self)
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        if exc_value is not None:
+            raise exc_type, exc_value, traceback
+
+    def __enter__(self):
+        return self
+
 
 class DummyDataManager:
     implements(IDataManager)
