@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.0b2 (unreleased)
+2.0b2 (2013-03-20)
 ------------------
 
 - Add support for Python 3.2 / 3.3.
