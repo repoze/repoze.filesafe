@@ -11,3 +11,4 @@
 *.pt.py
 *.egg
 *.egg-info
+.tox
