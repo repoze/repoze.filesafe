@@ -1,4 +1,3 @@
-#from StringIO import StringIO
 from six import StringIO
 from zope.interface import implementer
 from transaction.interfaces import IDataManager
