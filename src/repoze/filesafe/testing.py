@@ -1,6 +1,8 @@
-from StringIO import StringIO
-from zope.interface import implements
+#from StringIO import StringIO
+from six import StringIO
+from zope.interface import implementer
 from transaction.interfaces import IDataManager
+from six import reraise
 
 
 class MockFile(StringIO):
@@ -11,14 +13,14 @@ class MockFile(StringIO):
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
         if exc_value is not None:
-            raise exc_type, exc_value, traceback
+            reraise(exc_type, exc_value, traceback)
 
     def __enter__(self):
         return self
 
 
+@implementer(IDataManager)
 class DummyDataManager:
-    implements(IDataManager)
 
     def __init__(self, tempdir=None):
         self.tempdir = tempdir

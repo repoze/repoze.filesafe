@@ -1,14 +1,14 @@
 import logging
 import os.path
 import tempfile
-from zope.interface import implements
+from zope.interface import implementer
 from transaction.interfaces import IDataManager
 
 log = logging.getLogger("repoze.filesafe")
 
 
+@implementer(IDataManager)
 class FileSafeDataManager:
-    implements(IDataManager)
 
     transaction_manager = None
 
