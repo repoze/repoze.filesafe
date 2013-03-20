@@ -26,8 +26,8 @@ setup(name='repoze.filesafe',
       include_package_data=True,
       namespace_packages=['repoze'],
       zip_safe=False,
-      install_requires=['transaction', 'setuptools'],
-      test_suite = "repoze.filesafe.tests",
+      install_requires=['transaction', 'six'],
+      test_suite = "repoze.filesafe",
       entry_points="""
       [paste.filter_factory]
       filesafe = repoze.filesafe:filesafe_filter_factory

@@ -44,7 +44,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
     def testCreateFile(self):
         dm = self.dm
         newfile = dm.createFile("tst", "w")
-        self.assertEqual(dm.vault.keys(), ["tst"])
+        self.assertEqual(list(dm.vault.keys()), ["tst"])
         self.failUnless(callable(newfile.read))
         self.failUnless(callable(newfile.write))
 
