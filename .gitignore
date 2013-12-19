@@ -9,6 +9,7 @@
 *.pyc
 *.pyo
 *.pt.py
+*.swp
 *.egg
 *.egg-info
 .tox
