@@ -3,7 +3,9 @@ import shutil
 import tempfile
 import unittest
 from repoze.filesafe.manager import FileSafeDataManager
-from repoze.filesafe.testing import DummyDataManager, MockFile
+from repoze.filesafe.testing import DummyDataManager
+from repoze.filesafe.testing import MockBytesIO
+from repoze.filesafe.testing import MockStringIO
 
 
 class get_manager_tests(unittest.TestCase):
@@ -52,6 +54,16 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm = self.dm
         dm.createFile("tst", "w")
         self.assertRaises(ValueError, dm.createFile, "tst", "w")
+
+    def test_create_text_file(self):
+        dm = self.dm
+        newfile = dm.createFile('tst', 'w')
+        newfile.write('Hello')
+
+    def test_create_bytesfile(self):
+        dm = self.dm
+        newfile = dm.createFile('tst', 'wb')
+        newfile.write(b'Hello')
 
     def testCommitWithoutOriginal(self):
         dm = self.dm
@@ -337,11 +349,12 @@ class DummyDataManagerTests(FileSafeDataManagerTests):
     def exists(self, path):
         return path in self.dm.data
 
-    def open(self, path, mode=None):
+    def open(self, path, mode='r'):
+        cls = MockBytesIO if 'b' in mode else MockStringIO
         if mode is None or 'r' in mode:
-            return MockFile(self.dm.data[path].mockdata)
+            return cls(self.dm.data[path].mockdata)
         elif 'w' in mode:
-            f = self.dm.data[path] = MockFile()
+            f = self.dm.data[path] = cls()
             return f
 
     def setUp(self):

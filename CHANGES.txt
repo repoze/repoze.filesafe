@@ -1,6 +1,13 @@
 Changelog
 =========
 
+2.0 - Unreleased
+------------------
+
+- Update dummy datamanger to create BytesIO mock files if the file is
+  opened in binary mode.
+
+
 2.0b2 (2013-03-20)
 ------------------
 

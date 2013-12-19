@@ -1,13 +1,14 @@
+from six import BytesIO
 from six import StringIO
 from zope.interface import implementer
 from transaction.interfaces import IDataManager
 from six import reraise
 
 
-class MockFile(StringIO):
+class MockFileMixin(object):
     def close(self):
         self.mockdata = self.getvalue()
-        return StringIO.close(self)
+        return super(MockFileMixin, self).close()
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
@@ -16,6 +17,14 @@ class MockFile(StringIO):
 
     def __enter__(self):
         return self
+
+
+class MockBytesIO(MockFileMixin, BytesIO):
+    pass
+
+
+class MockStringIO(MockFileMixin, StringIO):
+    pass
 
 
 @implementer(IDataManager)
@@ -34,11 +43,12 @@ class DummyDataManager:
             else:
                 raise ValueError("%s is already taken", path)
         tmppath = "tmp%s" % path
-        self.data[tmppath] = file = MockFile()
-        self.vault[path] = dict(tempfile=tmppath)
+        self.data[tmppath] = file = MockBytesIO() if 'b' in mode else MockStringIO()
+        self.vault[path] = {'tempfile': tmppath}
         return file
 
     def openFile(self, path, mode="r"):
+        cls = MockBytesIO if 'b' in mode else MockStringIO
         if path in self.vault:
             info = self.vault[path]
             if info.get('deleted', False):
@@ -46,7 +56,7 @@ class DummyDataManager:
                         "[Errno 2] No such file or directory: '%s'" % path)
             file = self.data[info["tempfile"]]
             if file.closed:
-                return MockFile(file.mockdata)
+                return cls(file.mockdata)
             else:
                 return file
         else:
@@ -54,7 +64,7 @@ class DummyDataManager:
                 return open(path, mode)
             file = self.data[path]
             if file.closed:
-                return MockFile(file.mockdata)
+                return cls(file.mockdata)
             else:
                 return file
 
@@ -67,7 +77,7 @@ class DummyDataManager:
             del self.data[info["tempfile"]]
             del self.vault[path]
         else:
-            self.vault[path] = dict(tempfile=path, deleted=True)
+            self.vault[path] = {'tempfile': path, 'deleted': True}
 
     def tpc_begin(self, transaction):
         pass
