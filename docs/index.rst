@@ -77,9 +77,9 @@ Unit tests
 :mod:`repoze.filesafe.testing` provides several utility methods to facilitate
 unit testing of code which uses :mod:`repoze.filesafe`:
 
-.. autofunction:: repoze.filesafe.testing.setupDummyDataManager
+.. autofunction:: repoze.filesafe.testing.setup_dummy_data_manager
 
-.. autofunction:: repoze.filesafe.testing.cleanupDummyDataManager
+.. autofunction:: repoze.filesafe.testing.cleanup_dummy_data_manager
 
 
 Integration :mod:`repoze.filesafe` with transactions

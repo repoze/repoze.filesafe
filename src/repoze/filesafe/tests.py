@@ -43,32 +43,32 @@ class FileSafeDataManagerTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    def testCreateFile(self):
+    def test_create_file(self):
         dm = self.dm
-        newfile = dm.createFile("tst", "w")
+        newfile = dm.create_file("tst", "w")
         self.assertEqual(list(dm.vault.keys()), ["tst"])
         self.failUnless(callable(newfile.read))
         self.failUnless(callable(newfile.write))
 
-    def testCanNotCreateFileTwice(self):
+    def test_can_not_create_file_twice(self):
         dm = self.dm
-        dm.createFile("tst", "w")
-        self.assertRaises(ValueError, dm.createFile, "tst", "w")
+        dm.create_file("tst", "w")
+        self.assertRaises(ValueError, dm.create_file, "tst", "w")
 
     def test_create_text_file(self):
         dm = self.dm
-        newfile = dm.createFile('tst', 'w')
+        newfile = dm.create_file('tst', 'w')
         newfile.write('Hello')
 
     def test_create_bytesfile(self):
         dm = self.dm
-        newfile = dm.createFile('tst', 'wb')
+        newfile = dm.create_file('tst', 'wb')
         newfile.write(b'Hello')
 
-    def testCommitWithoutOriginal(self):
+    def test_commit_without_original(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
-        newfile = dm.createFile(target, "w")
+        newfile = dm.create_file(target, "w")
         newfile.write("Hello, World!")
         newfile.close()
         dm.commit(None)
@@ -79,13 +79,13 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(self.exists(target), True)
         self.assertEqual(self.open(target).read(), "Hello, World!")
 
-    def testCommitWithOriginal(self):
+    def test_commit_with_original(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         oldfile = self.open(target, "w")
         oldfile.write("...---...")
         oldfile.close()
-        newfile = dm.createFile(target, "w")
+        newfile = dm.create_file(target, "w")
         newfile.write("Hello, World!")
         newfile.close()
         dm.commit(None)
@@ -95,14 +95,14 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(self.open(target).read(), "Hello, World!")
         self.assertEqual(self.exists("%s.filesafe" % target), True)
 
-    def testFinishWithoutOriginals(self):
+    def test_finish_without_originals(self):
         dm = self.dm
         dm.vault = dict(one={}, two={})
         dm.tpc_finish(None)
         self.assertEqual(dm.vault, {})
         self.assertEqual(dm.in_commit, False)
 
-    def testFinishWithOriginal(self):
+    def test_finish_with_original(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open("%s.filesafe" % target, "w").close()
@@ -110,14 +110,14 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm.tpc_finish(None)
         self.assertEqual(self.exists("%s.filesafe" % target), False)
 
-    def testFinishWithMissingOriginal(self):
+    def test_finish_with_missing_original(self):
         dm = self.dm
         # Corner case: original was removed by someone else
         target = os.path.join(self.tempdir, "greeting")
         dm.vault = {target: dict(has_original=True)}
         dm.tpc_finish(None)
 
-    def testAbortWithMovedFile(self):
+    def test_abort_with_moved_file(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
@@ -125,7 +125,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm.tpc_abort(None)
         self.assertEqual(self.exists(target), False)
 
-    def testAbortWithMovedFileWithOriginal(self):
+    def test_abort_with_moved_file_with_original(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
@@ -139,7 +139,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(self.exists(targetsafe), False)
         self.assertEqual(self.open(target).read(), "...---...")
 
-    def testAbortWithUnmovedFile(self):
+    def test_abort_with_unmoved_file(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
@@ -147,197 +147,197 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm.tpc_abort(None)
         self.assertEqual(self.exists(target), False)
 
-    def testAbortWithUnmovedFileWhichDisappeared(self):
+    def test_abort_with_unmoved_file_which_disappeared(self):
         dm = self.dm
         # Corner case: temporary file disappeared
         target = os.path.join(self.tempdir, "greeting")
         dm.vault = {"bogus": dict(moved=False, tempfile=target)}
         dm.tpc_abort(None)
 
-    def testOpenFileInVault(self):
+    def test_open_file_in_vault(self):
         dm = self.dm
-        f = dm.createFile("dummy", "w")
+        f = dm.create_file("dummy", "w")
         f.write("Hello!")
         f.close()
-        f = dm.openFile("dummy")
+        f = dm.open_file("dummy")
         self.assertEqual(f.read(), "Hello!")
         f.close()
 
-    def testOpenFileOutsideVault(self):
+    def test_open_file_outside_vault(self):
         dm = self.dm
-        f = dm.openFile(__file__)
+        f = dm.open_file(__file__)
         self.failUnless("testOpenFileInVault" in f.read())
         f.close()
 
-    def testDeleteNewFileBeforeCommit(self):
+    def test_delete_new_file_before_commit(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
-        dm.createFile(target, "w")
-        newfile = dm.openFile(target, "r")
+        dm.create_file(target, "w")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
-        self.assertRaises(IOError, dm.openFile, target, "r")
+        dm.delete_file(target)
+        self.assertRaises(IOError, dm.open_file, target, "r")
 
-    def testDeleteExistingFileBeforeCommit(self):
+    def test_delete_existing_file_before_commit(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
         self.assertEqual(self.exists(target), True)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
+        dm.delete_file(target)
         # the file isn't actually gone, but can't be opened anymore
-        self.assertRaises(IOError, dm.openFile, target, "r")
+        self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), True)
 
-    def testDeleteNewFileBeforeAbort(self):
+    def test_delete_new_file_before_abort(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
-        dm.createFile(target, "w")
-        newfile = dm.openFile(target, "r")
+        dm.create_file(target, "w")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
+        dm.delete_file(target)
         dm.commit(None)
         dm.tpc_abort(None)
-        self.assertRaises(IOError, dm.openFile, target, "r")
+        self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), False)
 
-    def testDeleteExistingFileBeforeAbort(self):
+    def test_delete_existing_file_before_abort(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
         self.assertEqual(self.exists(target), True)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
+        dm.delete_file(target)
         dm.commit(None)
         dm.tpc_abort(None)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         self.assertEqual(self.exists(target), True)
 
-    def testDeleteNewFileBeforeFinish(self):
+    def test_delete_new_file_before_finish(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
-        dm.createFile(target, "w")
-        newfile = dm.openFile(target, "r")
+        dm.create_file(target, "w")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
+        dm.delete_file(target)
         dm.commit(None)
         dm.tpc_finish(None)
-        self.assertRaises(IOError, dm.openFile, target, "r")
+        self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), False)
 
-    def testDeleteExistingFileBeforeFinish(self):
+    def test_delete_existing_file_before_finish(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
         self.assertEqual(self.exists(target), True)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
+        dm.delete_file(target)
         dm.commit(None)
         dm.tpc_finish(None)
-        self.assertRaises(IOError, dm.openFile, target, "r")
+        self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), False)
 
-    def testDeleteAndRecreateNewFileBeforeCommit(self):
+    def test_delete_and_recreate_new_file_before_commit(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
-        created_file = dm.createFile(target, "w")
+        created_file = dm.create_file(target, "w")
         created_file.write("a")
         created_file.close()
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
-        recreated_file = dm.createFile(target, "w")
+        dm.delete_file(target)
+        recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "b")
 
-    def testDeleteAndRecreateExistingFileBeforeCommit(self):
+    def test_delete_and_recreate_existing_file_before_commit(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         existing_file = self.open(target, "w")
         existing_file.write("a")
         existing_file.close()
         self.assertEqual(self.exists(target), True)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
-        recreated_file = dm.createFile(target, "w")
+        dm.delete_file(target)
+        recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "b")
         self.assertEqual(self.exists(target), True)
         self.assertEqual(self.open(target).read(), "a")
 
-    def testDeleteAndRecreateExistingFileBeforeAbort(self):
+    def test_delete_and_recreate_existing_file_before_abort(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         existing_file = self.open(target, "w")
         existing_file.write("a")
         existing_file.close()
         self.assertEqual(self.exists(target), True)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
-        recreated_file = dm.createFile(target, "w")
+        dm.delete_file(target)
+        recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
         dm.commit(None)
         dm.tpc_abort(None)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         self.assertEqual(self.exists(target), True)
         self.assertEqual(self.open(target).read(), "a")
 
-    def testDeleteAndRecreateNewFileBeforeFinish(self):
+    def test_delete_and_recreate_new_file_before_finish(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
-        dm.createFile(target, "w")
-        newfile = dm.openFile(target, "r")
+        dm.create_file(target, "w")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
-        recreated_file = dm.createFile(target, "w")
+        dm.delete_file(target)
+        recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
         dm.commit(None)
         dm.tpc_finish(None)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "b")
         self.assertEqual(self.exists(target), True)
         self.assertEqual(self.open(target).read(), "b")
 
-    def testDeleteAndRecreateExistingFileBeforeFinish(self):
+    def test_delete_and_recreate_existing_file_before_finish(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         existing_file = self.open(target, "w")
         existing_file.write("a")
         existing_file.close()
         self.assertEqual(self.exists(target), True)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
-        dm.deleteFile(target)
-        recreated_file = dm.createFile(target, "w")
+        dm.delete_file(target)
+        recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
         dm.commit(None)
         dm.tpc_finish(None)
-        newfile = dm.openFile(target, "r")
+        newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         self.assertEqual(self.exists(target), True)
         self.assertEqual(self.open(target).read(), "b")

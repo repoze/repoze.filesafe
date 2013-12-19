@@ -7,6 +7,8 @@ Changelog
 - Update dummy datamanger to create BytesIO mock files if the file is
   opened in binary mode.
 
+- Update internal function naming to PEP8.
+
 
 2.0b2 (2013-03-20)
 ------------------

@@ -32,13 +32,14 @@ def create_file(path, mode='w'):
 
 def open_file(path, mode='r'):
     mgr = _get_manager()
-    return mgr.openFile(path, mode)
+    return mgr.open_file(path, mode)
 
 def delete_file(path):
     mgr = _get_manager()
-    return mgr.deleteFile(path)
+    return mgr.delete_file(path)
 
 
+# Backwards compatibility only
 createFile = create_file
 openFile = open_file
 deleteFile = delete_file

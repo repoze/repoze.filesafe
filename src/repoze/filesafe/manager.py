@@ -22,7 +22,7 @@ class FileSafeDataManager:
         self.vault.clear()
         _remove_manager()
 
-    def createFile(self, path, mode):
+    def create_file(self, path, mode):
         if path in self.vault:
             if self.vault[path].get('deleted', False):
                 del self.vault[path]
@@ -40,7 +40,7 @@ class FileSafeDataManager:
         self.vault[path] = dict(tempfile=file.name)
         return file
 
-    def openFile(self, path, mode="r"):
+    def open_file(self, path, mode="r"):
         if path in self.vault:
             info = self.vault[path]
             if info.get('deleted', False):
@@ -50,7 +50,7 @@ class FileSafeDataManager:
         else:
             return open(path, mode)
 
-    def deleteFile(self, path):
+    def delete_file(self, path):
         if path in self.vault:
             info = self.vault[path]
             if info.get('deleted', False):

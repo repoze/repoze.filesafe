@@ -36,7 +36,7 @@ class DummyDataManager:
         self.data = {}
         self.vault = {}
 
-    def createFile(self, path, mode):
+    def create_file(self, path, mode):
         if path in self.vault:
             if self.vault[path].get('deleted', False):
                 del self.vault[path]
@@ -47,7 +47,7 @@ class DummyDataManager:
         self.vault[path] = {'tempfile': tmppath}
         return file
 
-    def openFile(self, path, mode="r"):
+    def open_file(self, path, mode="r"):
         cls = MockBytesIO if 'b' in mode else MockStringIO
         if path in self.vault:
             info = self.vault[path]
@@ -68,7 +68,7 @@ class DummyDataManager:
             else:
                 return file
 
-    def deleteFile(self, path):
+    def delete_file(self, path):
         if path in self.vault:
             info = self.vault[path]
             if info.get('deleted', False):
@@ -147,24 +147,31 @@ class DummyDataManager:
     abort = tpc_abort
 
 
-def setupDummyDataManager():
-    """Setup a dummy datamanager. This datamanager will not make any changes
-    on the filesystem; instead it creates in-memory files and returns those
-    to the caller. The created files can be found in the `data` attribute of
-    the returned data manager.
+def setup_dummy_data_manager():
+    """Setup a dummy datamanager.
+
+    This datamanager will not make any changes on the filesystem; instead it
+    creates in-memory files and returns those to the caller. The created files
+    can be found in the `data` attribute of the returned data manager.
     """
     import repoze.filesafe
     repoze.filesafe._local.manager = mgr = DummyDataManager()
     return mgr
 
 
-def cleanupDummyDataManager():
-    """Remove a dummy datamanger, if installed. The manager is returned,
-    allowing tests to introspect the created files via the `data` attribute of
-    the returned data manager.
+def cleanup_dummy_data_manager():
+    """Remove a dummy datamanger, if installed.
+
+    The manager is returned, allowing tests to introspect the created files via
+    the `data` attribute of the returned data manager.
     """
     import repoze.filesafe
     manager = getattr(repoze.filesafe._local, 'manager', None)
     if isinstance(manager, DummyDataManager):
         del repoze.filesafe._local.manager
     return manager
+
+
+# Backwards compatibility only.
+setupDummyDataManager = setup_dummy_data_manager
+cleanupDummyDataManager = cleanup_dummy_data_manager
