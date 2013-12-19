@@ -5,10 +5,13 @@ from transaction.interfaces import IDataManager
 from six import reraise
 
 
-class MockFileMixin(object):
+# MockFileMixIn must not be derived from object, or the closed attributed
+# from StringIO will disappear in Python 2. This unfortuantely means we can
+# also not use super(), so we need the _base attribute with the base class.
+class MockFileMixin:
     def close(self):
         self.mockdata = self.getvalue()
-        return super(MockFileMixin, self).close()
+        self._base.close(self)
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
@@ -20,11 +23,11 @@ class MockFileMixin(object):
 
 
 class MockBytesIO(MockFileMixin, BytesIO):
-    pass
+    _base = BytesIO
 
 
 class MockStringIO(MockFileMixin, StringIO):
-    pass
+    _base = StringIO
 
 
 @implementer(IDataManager)
