@@ -27,7 +27,7 @@ def _get_manager():
 
 def create_file(path, mode='w'):
     mgr = _get_manager()
-    return mgr.createFile(path, mode)
+    return mgr.create_file(path, mode)
 
 
 def open_file(path, mode='r'):
