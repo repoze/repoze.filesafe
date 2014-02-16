@@ -13,12 +13,12 @@ def _remove_manager(*a):
     except AttributeError:
         pass
 
-def _get_manager():
+def _get_manager(tempdir=None):
     manager = getattr(_local, 'manager', None)
     if manager is not None:
         return manager
 
-    manager = _local.manager = FileSafeDataManager()
+    manager = _local.manager = FileSafeDataManager(tempdir)
     tx = transaction.get()
     tx.join(manager)
     tx.addAfterCommitHook(_remove_manager)
