@@ -46,7 +46,9 @@ If the transaction is aborted the temporary file will be removed.
 filesystem as the target path. The default location is determined by
 the python :mod:`tempfile` module. You may need to configure a different path
 if you use a separate filesystem for `/tmp` using the `TMPDIR` environment
-variable.
+variable. Alternatively, `create_file` accepts a third parameter `tempdir`,
+which is `None` by default, to allow you to specify a temporary directory
+for :mod:`tempfile` module to use.
 
 
 It is possible to (re)open a file that has not been been commited yet using
