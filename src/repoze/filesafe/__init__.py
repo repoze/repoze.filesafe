@@ -25,8 +25,8 @@ def _get_manager(tempdir=None):
     return manager
 
 
-def create_file(path, mode='w'):
-    mgr = _get_manager()
+def create_file(path, mode='w', tempdir=None):
+    mgr = _get_manager(tempdir)
     return mgr.create_file(path, mode)
 
 
