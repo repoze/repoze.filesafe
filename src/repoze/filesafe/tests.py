@@ -1,4 +1,4 @@
-import os.path
+import os
 import shutil
 import tempfile
 import unittest
@@ -8,8 +8,13 @@ from repoze.filesafe.testing import MockBytesIO
 from repoze.filesafe.testing import MockStringIO
 
 
-class get_manager_tests(unittest.TestCase):
-    def _get_manager(self, *a, **kw):
+class Test_get_manager(unittest.TestCase):
+
+    def tearDown(self):
+        from repoze.filesafe import _remove_manager
+        _remove_manager()
+
+    def _callFUT(self, *a, **kw):
         from repoze.filesafe import _get_manager
         return _get_manager(*a, **kw)
 
@@ -17,11 +22,32 @@ class get_manager_tests(unittest.TestCase):
         import transaction
         from repoze.filesafe import _local
         self.assertTrue(not hasattr(_local, 'manager'))
-        mgr = self._get_manager()
+        mgr = self._callFUT()
         self.assertTrue(isinstance(mgr, FileSafeDataManager))
         self.assertTrue(_local.manager is mgr)
         transaction.get().abort()
         self.assertTrue(not hasattr(_local, 'manager'))
+
+
+class Test_create_file(unittest.TestCase):
+
+    def tearDown(self):
+        from repoze.filesafe import _remove_manager
+        _remove_manager()
+
+    def _callFUT(self, *a, **kw):
+        from repoze.filesafe import create_file
+        return create_file(*a, **kw)
+
+    def test_custom_tempdir_create_file(self):
+        test_tempdir = tempfile.mkdtemp()
+        try:
+            newfile = self._callFUT("tst", "w", test_tempdir)
+            self.assertEqual(os.path.dirname(newfile.name), test_tempdir)
+            self.failUnless(callable(newfile.read))
+            self.failUnless(callable(newfile.write))
+        finally:
+            shutil.rmtree(test_tempdir)
 
 
 class FileSafeDataManagerTests(unittest.TestCase):
@@ -49,19 +75,6 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(list(dm.vault.keys()), ["tst"])
         self.failUnless(callable(newfile.read))
         self.failUnless(callable(newfile.write))
-        
-    def test_custom_tempdir_create_file(self):
-        import shutil
-        import tempfile
-        dm = self.dm
-        test_tempdir = tempfile.mkdtmp()
-        try:
-            newfile = dm.create_file("tst", "w", test_tempdir)
-            self.assertEqual(list(dm.vault.keys()), ["tst"])
-            self.failUnless(callable(newfile.read))
-            self.failUnless(callable(newfile.write))
-        finally:
-            shutil.rmtree(test_tempdir)
 
     def test_can_not_create_file_twice(self):
         dm = self.dm
