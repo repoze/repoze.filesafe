@@ -49,6 +49,17 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(list(dm.vault.keys()), ["tst"])
         self.failUnless(callable(newfile.read))
         self.failUnless(callable(newfile.write))
+        
+    def test_custom_tempdir_create_file(self):
+        dm = self.dm
+        cwd = os.getcwd()
+        test_tempdir = cwd + '/test_tempdir'
+        if not os.path.exists(test_tempdir):
+            os.makedirs(test_tempdir)
+        newfile = dm.create_file("tst", "w", test_tempdir)
+        self.assertEqual(list(dm.vault.keys()), ["tst"])
+        self.failUnless(callable(newfile.read))
+        self.failUnless(callable(newfile.write))
 
     def test_can_not_create_file_twice(self):
         dm = self.dm
