@@ -1,3 +1,4 @@
+import errno
 import os
 import shutil
 import tempfile
@@ -368,6 +369,15 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(self.exists(target), True)
         self.assertEqual(self.open(target).read(), "b")
 
+    def test_delete_non_existing_file(self):
+        dm = self.dm
+        try:
+            dm.delete_file('/non-existing-file')
+        except OSError as e:
+            assert e.errno == errno.ENOENT
+        else:
+            self.fail('No OSError exception raised')
+
 
 class DummyDataManagerTests(FileSafeDataManagerTests):
     DM = DummyDataManager
@@ -388,4 +398,7 @@ class DummyDataManagerTests(FileSafeDataManagerTests):
         self.dm = self.DM(self.tempdir)
 
     def tearDown(self):
+        pass
+
+    def test_delete_non_existing_file(self):
         pass

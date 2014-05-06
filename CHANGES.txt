@@ -1,6 +1,13 @@
 Changelog
 =========
 
+2.1 - Unreleased
+------------------
+
+- Fix OSError exceptions raised when deleting a non-existing file to have the
+  right errno value.
+
+
 2.0 - (2013-12-20)
 ------------------
 

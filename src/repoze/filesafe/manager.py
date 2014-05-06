@@ -1,3 +1,4 @@
+import errno
 import logging
 import os.path
 import tempfile
@@ -54,7 +55,7 @@ class FileSafeDataManager:
         if path in self.vault:
             info = self.vault[path]
             if info.get('deleted', False):
-                raise OSError(
+                raise OSError(errno.ENOENT,
                         "[Errno 2] No such file or directory: '%s'" % path)
             try:
                 os.unlink(info["tempfile"])
@@ -66,7 +67,7 @@ class FileSafeDataManager:
             del self.vault[path]
         else:
             if not os.path.exists(path):
-                raise OSError(
+                raise OSError(errno.ENOENT,
                         "[Errno 2] No such file or directory: '%s'" % path)
             self.vault[path] = dict(tempfile=path, deleted=True)
 
