@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.1 - Unreleased
+2.1 - (2014-05-06)
 ------------------
 
 - Fix OSError exceptions raised when deleting a non-existing file to have the
