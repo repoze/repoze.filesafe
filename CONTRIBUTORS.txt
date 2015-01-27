@@ -106,3 +106,4 @@ Contributors
 - Tres Seaver, 2011/03/22
 - Wichert Akkerman, 2011-03-22
 - Atsushi Odagiri, 2013-03-16
+- Andreas Zeidler, 2015-01-27
