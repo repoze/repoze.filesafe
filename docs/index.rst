@@ -71,7 +71,8 @@ called with a path that has not been created using `create_file` in the current
 transaction it will be opened normally, as if the standard `open` method was
 used.
 
-You can also delete files with `delete_file`.
+You can also delete files with `delete_file` as well as rename or move files
+using `rename_file`.
 
 
 Unit tests

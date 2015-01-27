@@ -41,6 +41,15 @@ class FileSafeDataManager:
         self.vault[path] = dict(tempfile=file.name)
         return file
 
+    def rename_file(self, src, dst):
+        if dst in self.vault:
+            if self.vault[dst].get('deleted', False):
+                del self.vault[dst]
+            else:
+                raise ValueError("%s is already taken", dst)
+        self.vault[dst] = dict(tempfile=src, source=src,
+            moved=True, has_original=False)
+
     def open_file(self, path, mode="r"):
         if path in self.vault:
             info = self.vault[path]
@@ -126,6 +135,8 @@ class FileSafeDataManager:
                 try:
                     if info["has_original"]:
                         os.rename("%s.filesafe" % target, target)
+                    elif 'source' in info:
+                        os.rename(target, info["source"])
                     else:
                         os.unlink(target)
                 except OSError:

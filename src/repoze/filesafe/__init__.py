@@ -30,6 +30,11 @@ def create_file(path, mode='w', tempdir=None):
     return mgr.create_file(path, mode)
 
 
+def rename_file(src, dst):
+    mgr = _get_manager()
+    return mgr.rename_file(src, dst)
+
+
 def open_file(path, mode='r'):
     mgr = _get_manager()
     return mgr.open_file(path, mode)
