@@ -13,7 +13,6 @@ def _remove_manager(*a):
     except AttributeError:
         pass
 
-
 def _get_manager(tempdir=None):
     manager = getattr(_local, 'manager', None)
     if manager is not None:
@@ -39,7 +38,6 @@ def rename_file(src, dst):
 def open_file(path, mode='r'):
     mgr = _get_manager()
     return mgr.open_file(path, mode)
-
 
 def delete_file(path):
     mgr = _get_manager()
