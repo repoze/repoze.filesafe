@@ -50,6 +50,14 @@ class DummyDataManager:
         self.vault[path] = {'tempfile': tmppath}
         return file
 
+    def rename_file(self, src, dst):
+        if dst in self.vault:
+            if self.vault[dst].get('deleted', False):
+                del self.vault[dst]
+            else:
+                raise ValueError("%s is already taken", dst)
+        self.vault[dst] = dict(tempfile=src, source=src)
+
     def open_file(self, path, mode="r"):
         cls = MockBytesIO if 'b' in mode else MockStringIO
         if path in self.vault:
@@ -125,6 +133,10 @@ class DummyDataManager:
                     if info["has_original"]:
                         oldname = "%s.filesafe" % target
                         self.data[target] = self.data[oldname]
+                        del self.data[oldname]
+                    elif 'source' in info:
+                        oldname = target
+                        self.data[info["source"]] = self.data[oldname]
                         del self.data[oldname]
                     else:
                         del self.data[target]
