@@ -56,7 +56,8 @@ class DummyDataManager:
                 del self.vault[dst]
             else:
                 raise ValueError("%s is already taken", dst)
-        self.vault[dst] = dict(tempfile=src, source=src)
+        self.vault[dst] = dict(tempfile=src, source=src,
+            moved=True, has_original=False)
 
     def open_file(self, path, mode="r"):
         cls = MockBytesIO if 'b' in mode else MockStringIO

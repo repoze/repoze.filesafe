@@ -404,6 +404,20 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(self.exists(source), True)
         self.assertEqual(self.exists(target), False)
         dm.rename_file(source, target)
+        dm.tpc_abort(None)
+        self.assertEqual(self.exists(target), False)
+        self.assertEqual(self.exists(source), True)
+        self.assertEqual(self.open(source).read(), "...---...")
+
+    def test_abort_rename_file_before_finish(self):
+        dm = self.dm
+        source = os.path.join(self.tempdir, "foo")
+        target = os.path.join(self.tempdir, "bar")
+        with self.open(source, "w") as fd:
+            fd.write("...---...")
+        self.assertEqual(self.exists(source), True)
+        self.assertEqual(self.exists(target), False)
+        dm.rename_file(source, target)
         dm.commit(None)
         dm.tpc_abort(None)
         self.assertEqual(self.exists(target), False)
