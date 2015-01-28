@@ -30,9 +30,9 @@ def create_file(path, mode='w', tempdir=None):
     return mgr.create_file(path, mode)
 
 
-def rename_file(src, dst):
+def rename_file(src, dst, recursive=False):
     mgr = _get_manager()
-    return mgr.rename_file(src, dst)
+    return mgr.rename_file(src, dst, recursive)
 
 
 def open_file(path, mode='r'):

@@ -395,6 +395,23 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(self.open(target).read(), "...---...")
         self.assertEqual(self.exists(source), False)
 
+    def test_rename_file_with_renames(self):
+        dm = self.dm
+        source = os.path.join(self.tempdir, "foo")
+        target = os.path.join(self.tempdir, "subdir/bar")
+        with self.open(source, "w") as fd:
+            fd.write("...---...")
+        self.assertEqual(self.exists(source), True)
+        self.assertEqual(self.exists(target), False)
+        dm.rename_file(source, target, recursive=True)
+        dm.commit(None)
+        dm.tpc_finish(None)
+        newfile = dm.open_file(target, "r")
+        self.assertEqual(newfile.read(), "...---...")
+        self.assertEqual(self.exists(target), True)
+        self.assertEqual(self.open(target).read(), "...---...")
+        self.assertEqual(self.exists(source), False)
+
     def test_abort_rename_file(self):
         dm = self.dm
         source = os.path.join(self.tempdir, "foo")
