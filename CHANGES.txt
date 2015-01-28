@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.2 - (unreleased)
+------------------
+
+- Add a new ``repoze.filesafe.rename_file`` function to move files.
+
+
 2.1 - (2014-05-06)
 ------------------
 
