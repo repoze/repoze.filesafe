@@ -41,14 +41,14 @@ class FileSafeDataManager:
         self.vault[path] = dict(tempfile=file.name)
         return file
 
-    def rename_file(self, src, dst):
+    def rename_file(self, src, dst, recursive=False):
         if dst in self.vault:
             if self.vault[dst].get('deleted', False):
                 del self.vault[dst]
             else:
                 raise ValueError("%s is already taken", dst)
         self.vault[dst] = dict(tempfile=src, source=src,
-            moved=True, has_original=False)
+            moved=True, has_original=False, recursive=recursive)
 
     def open_file(self, path, mode="r"):
         if path in self.vault:
@@ -97,7 +97,8 @@ class FileSafeDataManager:
                     os.link(target, "%s.filesafe" % target)
                 else:
                     info["has_original"] = False
-                os.rename(info["tempfile"], target)
+                rename = os.renames if info.get("recursive") else os.rename
+                rename(info["tempfile"], target)
                 info["moved"] = True
 
     def tpc_vote(self, transaction):
@@ -136,7 +137,8 @@ class FileSafeDataManager:
                     if info["has_original"]:
                         os.rename("%s.filesafe" % target, target)
                     elif 'source' in info:
-                        os.rename(target, info["source"])
+                        rename = os.renames if info.get("recursive") else os.rename
+                        rename(target, info["source"])
                     else:
                         os.unlink(target)
                 except OSError:

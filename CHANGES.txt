@@ -6,6 +6,9 @@ Changelog
 
 - Add a new ``repoze.filesafe.rename_file`` function to move files.
 
+- Add additional ``recursive`` parameter to allow ``repoze.filesafe.rename_file``
+  to use ``os.renames``, i.e. recursively create/remove intermediate directories.
+
 
 2.1 - (2014-05-06)
 ------------------

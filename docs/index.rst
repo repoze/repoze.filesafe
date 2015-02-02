@@ -72,7 +72,14 @@ transaction it will be opened normally, as if the standard `open` method was
 used.
 
 You can also delete files with `delete_file` as well as rename or move files
-using `rename_file`.
+using `rename_file`. The latter behaves like `os.rename`_, or like
+`os.renames`_, respectively, if you set the additional `recursive` parameter
+to `True`. In this case, intermediate directories will be created as necessary,
+but empty directories in the `src` path will also be deleted after the file
+has been moved successfully.
+
+.. _os.rename: https://docs.python.org/3.4/library/os.html#os.rename
+.. _os.renames: https://docs.python.org/3.4/library/os.html#os.renames
 
 
 Unit tests
