@@ -4,6 +4,7 @@
 /coverage.xml
 /bin
 /develop-eggs
+/dist
 /docs/.build
 /parts
 *.pyc
