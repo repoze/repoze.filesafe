@@ -76,6 +76,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(list(dm.vault.keys()), ["tst"])
         self.failUnless(callable(newfile.read))
         self.failUnless(callable(newfile.write))
+        self.failUnless(dm.file_exists("tst"))
 
     def test_can_not_create_file_twice(self):
         dm = self.dm
@@ -104,6 +105,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.assertEqual(dm.vault[target]["has_original"], False)
         self.assertEqual(self.exists(dm.vault[target]["tempfile"]), False)
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.open(target).read(), "Hello, World!")
 
     def test_commit_with_original(self):
@@ -204,6 +206,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
+        self.failIf(dm.file_exists(target))
         self.assertRaises(IOError, dm.open_file, target, "r")
 
     def test_delete_existing_file_before_commit(self):
@@ -211,10 +214,12 @@ class FileSafeDataManagerTests(unittest.TestCase):
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
+        self.failIf(dm.file_exists(target))
         # the file isn't actually gone, but can't be opened anymore
         self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), True)
@@ -224,6 +229,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         target = os.path.join(self.tempdir, "greeting")
         dm.create_file(target, "w")
         newfile = dm.open_file(target, "r")
+        self.failUnless(dm.file_exists(target))
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
@@ -231,12 +237,14 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm.tpc_abort(None)
         self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
 
     def test_delete_existing_file_before_abort(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
@@ -246,12 +254,14 @@ class FileSafeDataManagerTests(unittest.TestCase):
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
 
     def test_delete_new_file_before_finish(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         dm.create_file(target, "w")
         newfile = dm.open_file(target, "r")
+        self.failUnless(dm.file_exists(target))
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
@@ -259,12 +269,14 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm.tpc_finish(None)
         self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
 
     def test_delete_existing_file_before_finish(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         self.open(target, "w").close()
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
@@ -273,6 +285,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         dm.tpc_finish(None)
         self.assertRaises(IOError, dm.open_file, target, "r")
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
 
     def test_delete_and_recreate_new_file_before_commit(self):
         dm = self.dm
@@ -280,13 +293,16 @@ class FileSafeDataManagerTests(unittest.TestCase):
         created_file = dm.create_file(target, "w")
         created_file.write("a")
         created_file.close()
+        self.failUnless(dm.file_exists(target))
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
+        self.failIf(dm.file_exists(target))
         recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
+        self.failUnless(dm.file_exists(target))
         newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "b")
 
@@ -296,17 +312,20 @@ class FileSafeDataManagerTests(unittest.TestCase):
         existing_file = self.open(target, "w")
         existing_file.write("a")
         existing_file.close()
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.exists(target), True)
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
+        self.failIf(dm.file_exists(target))
         recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
         newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "b")
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.open(target).read(), "a")
 
     def test_delete_and_recreate_existing_file_before_abort(self):
@@ -315,11 +334,13 @@ class FileSafeDataManagerTests(unittest.TestCase):
         existing_file = self.open(target, "w")
         existing_file.write("a")
         existing_file.close()
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.exists(target), True)
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
+        self.failIf(dm.file_exists(target))
         recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
@@ -329,15 +350,18 @@ class FileSafeDataManagerTests(unittest.TestCase):
         self.failUnless(callable(newfile.read))
         self.assertEqual(self.exists(target), True)
         self.assertEqual(self.open(target).read(), "a")
+        self.failUnless(dm.file_exists(target))
 
     def test_delete_and_recreate_new_file_before_finish(self):
         dm = self.dm
         target = os.path.join(self.tempdir, "greeting")
         dm.create_file(target, "w")
+        self.failUnless(dm.file_exists(target))
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
+        self.failIf(dm.file_exists(target))
         recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
@@ -346,6 +370,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "b")
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.open(target).read(), "b")
 
     def test_delete_and_recreate_existing_file_before_finish(self):
@@ -355,10 +380,12 @@ class FileSafeDataManagerTests(unittest.TestCase):
         existing_file.write("a")
         existing_file.close()
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         del newfile
         dm.delete_file(target)
+        self.failIf(dm.file_exists(target))
         recreated_file = dm.create_file(target, "w")
         recreated_file.write("b")
         recreated_file.close()
@@ -367,6 +394,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
         newfile = dm.open_file(target, "r")
         self.failUnless(callable(newfile.read))
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.open(target).read(), "b")
 
     def test_delete_non_existing_file(self):
@@ -385,15 +413,21 @@ class FileSafeDataManagerTests(unittest.TestCase):
         with self.open(source, "w") as fd:
             fd.write("...---...")
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         dm.rename_file(source, target)
+        self.failIf(dm.file_exists(source))
+        self.failUnless(dm.file_exists(target))
         dm.commit(None)
         dm.tpc_finish(None)
         newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "...---...")
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.open(target).read(), "...---...")
         self.assertEqual(self.exists(source), False)
+        self.failIf(dm.file_exists(source))
 
     def test_recursive_rename_file(self):
         dm = self.dm
@@ -402,15 +436,21 @@ class FileSafeDataManagerTests(unittest.TestCase):
         with self.open(source, "w") as fd:
             fd.write("...---...")
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         dm.rename_file(source, target, recursive=True)
+        self.failIf(dm.file_exists(source))
+        self.failUnless(dm.file_exists(target))
         dm.commit(None)
         dm.tpc_finish(None)
         newfile = dm.open_file(target, "r")
         self.assertEqual(newfile.read(), "...---...")
         self.assertEqual(self.exists(target), True)
+        self.failUnless(dm.file_exists(target))
         self.assertEqual(self.open(target).read(), "...---...")
         self.assertEqual(self.exists(source), False)
+        self.failIf(dm.file_exists(source))
 
     def test_abort_rename_file(self):
         dm = self.dm
@@ -419,11 +459,17 @@ class FileSafeDataManagerTests(unittest.TestCase):
         with self.open(source, "w") as fd:
             fd.write("...---...")
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         dm.rename_file(source, target)
+        self.failIf(dm.file_exists(source))
+        self.failUnless(dm.file_exists(target))
         dm.tpc_abort(None)
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.open(source).read(), "...---...")
 
     def test_abort_rename_file_before_finish(self):
@@ -433,12 +479,18 @@ class FileSafeDataManagerTests(unittest.TestCase):
         with self.open(source, "w") as fd:
             fd.write("...---...")
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         dm.rename_file(source, target)
+        self.failIf(dm.file_exists(source))
+        self.failUnless(dm.file_exists(target))
         dm.commit(None)
         dm.tpc_abort(None)
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.open(source).read(), "...---...")
 
     def test_abort_recursive_rename_file_before_finish(self):
@@ -448,13 +500,19 @@ class FileSafeDataManagerTests(unittest.TestCase):
         with self.open(source, "w") as fd:
             fd.write("...---...")
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         dm.rename_file(source, target, recursive=True)
+        self.failIf(dm.file_exists(source))
+        self.failUnless(dm.file_exists(target))
         dm.commit(None)
         dm.tpc_abort(None)
         self.assertEqual(self.exists(target), False)
+        self.failIf(dm.file_exists(target))
         self.assertEqual(self.exists(os.path.dirname(target)), False)
         self.assertEqual(self.exists(source), True)
+        self.failUnless(dm.file_exists(source))
         self.assertEqual(self.open(source).read(), "...---...")
 
 

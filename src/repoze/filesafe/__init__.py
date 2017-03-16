@@ -39,9 +39,15 @@ def open_file(path, mode='r'):
     mgr = _get_manager()
     return mgr.open_file(path, mode)
 
+
 def delete_file(path):
     mgr = _get_manager()
     return mgr.delete_file(path)
+
+
+def file_exists(path):
+    mgr = _get_manager()
+    return mgr.file_exists(path)
 
 
 class FileSafeMiddleware(object):

@@ -96,6 +96,8 @@ class DummyDataManager:
                 "[Errno 2] No such file or directory: '%s'" % src)
         self.vault[dst] = dict(tempfile=src, source=src,
             moved=True, has_original=False, recursive=recursive)
+        self.vault[src] = dict(tempfile=src, destination=dst,
+            moved=True, has_original=self._exists(src), recursive=recursive)
 
     def open_file(self, path, mode="r"):
         cls = MockBytesIO if 'b' in mode else MockStringIO
@@ -138,6 +140,14 @@ class DummyDataManager:
                         "[Errno 2] No such file or directory: '%s'" % path)
             self.vault[path] = dict(tempfile=path, deleted=True)
 
+    def file_exists(self, path):
+        if path in self.vault:
+            info = self.vault[path]
+            deleted = info.get('deleted', False)
+            moved = info.get('moved', False) and 'destination' in info
+            return not (deleted or moved)
+        return self._exists(path)
+
     def tpc_begin(self, transaction):
         pass
 
@@ -145,6 +155,8 @@ class DummyDataManager:
         self.in_commit = True
         for target in self.vault:
             info = self.vault[target]
+            if info.get('moved', False) and 'destination' in info:
+                continue
             if info.get("deleted", False):
                 self._rename(target, "%s.filesafe" % target)
                 info["has_original"] = True
