@@ -4,6 +4,10 @@ Changelog
 3.0 - (unreleased)
 ------------------
 
+- Add ``file_exists`` and ``file_path`` functions which know about files
+  created and removed during the transaction.
+  [fschulze]
+
 - Throw OSError if src of rename doesn't exist.
   [fschulze]
 
