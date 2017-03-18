@@ -4,7 +4,8 @@ Changelog
 2.3 - (unreleased)
 ------------------
 
-- ...
+- Removed testing of Python 3.2, added Python 3.4, 3.5 and 3.6.
+  [fschulze]
 
 
 2.2 - (2015-05-01)
