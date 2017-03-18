@@ -50,6 +50,11 @@ def file_exists(path):
     return mgr.file_exists(path)
 
 
+def file_path(path):
+    mgr = _get_manager()
+    return mgr.file_path(path)
+
+
 class FileSafeMiddleware(object):
     def __init__(self, app, config=None, **kwargs):
         self.app = app

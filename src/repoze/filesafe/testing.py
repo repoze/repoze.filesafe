@@ -148,6 +148,16 @@ class DummyDataManager:
             return not (deleted or moved)
         return self._exists(path)
 
+    def file_path(self, path):
+        if not self.file_exists(path):
+            raise OSError(
+                errno.ENOENT,
+                "[Errno 2] No such file or directory: '%s'" % path)
+        if path in self.vault:
+            info = self.vault[path]
+            return info["tempfile"]
+        return path
+
     def tpc_begin(self, transaction):
         pass
 
