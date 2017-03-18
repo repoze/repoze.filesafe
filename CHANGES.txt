@@ -1,8 +1,14 @@
 Changelog
 =========
 
-2.3 - (unreleased)
+3.0 - (unreleased)
 ------------------
+
+- Dropped backward compatibility stuff for older API.
+  [fschulze]
+
+- Removed pre Python 2.6 support.
+  [fschulze]
 
 - Removed testing of Python 3.2, added Python 3.4, 3.5 and 3.6.
   [fschulze]

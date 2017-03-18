@@ -186,8 +186,3 @@ def cleanup_dummy_data_manager():
     if isinstance(manager, DummyDataManager):
         del repoze.filesafe._local.manager
     return manager
-
-
-# Backwards compatibility only.
-setupDummyDataManager = setup_dummy_data_manager
-cleanupDummyDataManager = cleanup_dummy_data_manager

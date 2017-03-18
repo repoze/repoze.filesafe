@@ -44,12 +44,6 @@ def delete_file(path):
     return mgr.delete_file(path)
 
 
-# Backwards compatibility only
-createFile = create_file
-openFile = open_file
-deleteFile = delete_file
-
-
 class FileSafeMiddleware(object):
     def __init__(self, app, config=None, **kwargs):
         self.app = app
