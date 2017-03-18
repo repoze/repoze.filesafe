@@ -90,6 +90,10 @@ class DummyDataManager:
                 del self.vault[dst]
             else:
                 raise ValueError("%s is already taken", dst)
+        if src not in self.vault and not self._exists(src):
+            raise OSError(
+                errno.ENOENT,
+                "[Errno 2] No such file or directory: '%s'" % src)
         self.vault[dst] = dict(tempfile=src, source=src,
             moved=True, has_original=False, recursive=recursive)
 

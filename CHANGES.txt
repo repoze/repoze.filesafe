@@ -4,6 +4,9 @@ Changelog
 3.0 - (unreleased)
 ------------------
 
+- Throw OSError if src of rename doesn't exist.
+  [fschulze]
+
 - Dropped backward compatibility stuff for older API.
   [fschulze]
 
