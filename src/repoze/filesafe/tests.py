@@ -375,7 +375,7 @@ class FileSafeDataManagerTests(unittest.TestCase):
             dm.delete_file('/non-existing-file')
         except OSError as e:
             assert e.errno == errno.ENOENT
-        else:
+        else:  # pragma: no cover
             self.fail('No OSError exception raised')
 
     def test_rename_file(self):
