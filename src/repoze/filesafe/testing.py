@@ -43,35 +43,27 @@ class DummyDataManager:
     def _exists(self, path):
         return path in self.data
 
-    def _unlink(self, path):
-        if path not in self.data:
+    def _raise_on_existance(self, path):
+        if not self._exists(path):
             raise OSError(
                 errno.ENOENT,
                 "[Errno 2] No such file or directory: '%s'" % path)
+
+    def _unlink(self, path):
+        self._raise_on_existance(path)
         del self.data[path]
 
     def _link(self, src, link_name):
-        if src not in self.data:
-            raise OSError(
-                errno.ENOENT,
-                "[Errno 2] No such file or directory: '%s'" % src)
+        self._raise_on_existance(src)
         self.data[link_name] = self.data[src]
 
     def _rename(self, src, dst):
-        if src not in self.data:
-            raise OSError(
-                errno.ENOENT,
-                "[Errno 2] No such file or directory: '%s'" % src)
-        self.data[dst] = self.data[src]
-        del self.data[src]
+        self._raise_on_existance(src)
+        self.data[dst] = self.data.pop(src)
 
     def _renames(self, src, dst):
-        if src not in self.data:
-            raise OSError(
-                errno.ENOENT,
-                "[Errno 2] No such file or directory: '%s'" % src)
-        self.data[dst] = self.data[src]
-        del self.data[src]
+        self._raise_on_existance(src)
+        self.data[dst] = self.data.pop(src)
 
     def create_file(self, path, mode):
         if path in self.vault:
