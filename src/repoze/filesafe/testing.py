@@ -3,6 +3,7 @@ from six import StringIO
 from zope.interface import implementer
 from transaction.interfaces import IDataManager
 from six import reraise
+import errno
 
 
 # MockFileMixIn must not be derived from object, or the closed attributed
@@ -39,6 +40,31 @@ class DummyDataManager:
         self.data = {}
         self.vault = {}
 
+    def _exists(self, path):
+        return path in self.data
+
+    def _raise_on_existance(self, path):
+        if not self._exists(path):
+            raise OSError(
+                errno.ENOENT,
+                "[Errno 2] No such file or directory: '%s'" % path)
+
+    def _unlink(self, path):
+        self._raise_on_existance(path)
+        del self.data[path]
+
+    def _link(self, src, link_name):
+        self._raise_on_existance(src)
+        self.data[link_name] = self.data[src]
+
+    def _rename(self, src, dst):
+        self._raise_on_existance(src)
+        self.data[dst] = self.data.pop(src)
+
+    def _renames(self, src, dst):
+        self._raise_on_existance(src)
+        self.data[dst] = self.data.pop(src)
+
     def create_file(self, path, mode):
         if path in self.vault:
             if self.vault[path].get('deleted', False):
@@ -47,7 +73,7 @@ class DummyDataManager:
                 raise ValueError("%s is already taken", path)
         tmppath = "tmp%s" % path
         self.data[tmppath] = file = MockBytesIO() if 'b' in mode else MockStringIO()
-        self.vault[path] = {'tempfile': tmppath}
+        self.vault[path] = dict(tempfile=tmppath)
         return file
 
     def rename_file(self, src, dst, recursive=False):
@@ -56,8 +82,14 @@ class DummyDataManager:
                 del self.vault[dst]
             else:
                 raise ValueError("%s is already taken", dst)
+        if src not in self.vault and not self._exists(src):
+            raise OSError(
+                errno.ENOENT,
+                "[Errno 2] No such file or directory: '%s'" % src)
         self.vault[dst] = dict(tempfile=src, source=src,
             moved=True, has_original=False, recursive=recursive)
+        self.vault[src] = dict(tempfile=src, destination=dst,
+            moved=True, has_original=self._exists(src), recursive=recursive)
 
     def open_file(self, path, mode="r"):
         cls = MockBytesIO if 'b' in mode else MockStringIO
@@ -84,12 +116,39 @@ class DummyDataManager:
         if path in self.vault:
             info = self.vault[path]
             if info.get('deleted', False):
-                raise OSError(
+                raise OSError(errno.ENOENT,
                         "[Errno 2] No such file or directory: '%s'" % path)
-            del self.data[info["tempfile"]]
+            try:
+                self._unlink(info["tempfile"])
+            except OSError:
+                # XXX log.exception makes the testruns die with an exception
+                # in multiprocessing.util:258
+                #log.exception("Failed to delete temporary file %s", target)
+                pass
             del self.vault[path]
         else:
-            self.vault[path] = {'tempfile': path, 'deleted': True}
+            if not self._exists(path):
+                raise OSError(errno.ENOENT,
+                        "[Errno 2] No such file or directory: '%s'" % path)
+            self.vault[path] = dict(tempfile=path, deleted=True)
+
+    def file_exists(self, path):
+        if path in self.vault:
+            info = self.vault[path]
+            deleted = info.get('deleted', False)
+            moved = info.get('moved', False) and 'destination' in info
+            return not (deleted or moved)
+        return self._exists(path)
+
+    def file_path(self, path):
+        if not self.file_exists(path):
+            raise OSError(
+                errno.ENOENT,
+                "[Errno 2] No such file or directory: '%s'" % path)
+        if path in self.vault:
+            info = self.vault[path]
+            return info["tempfile"]
+        return path
 
     def tpc_begin(self, transaction):
         pass
@@ -98,14 +157,21 @@ class DummyDataManager:
         self.in_commit = True
         for target in self.vault:
             info = self.vault[target]
-            if target in self.data:
+            if info.get('moved', False) and 'destination' in info:
+                continue
+            if info.get("deleted", False):
+                self._rename(target, "%s.filesafe" % target)
                 info["has_original"] = True
-                self.data["%s.filesafe" % target] = self.data[target]
+                info["moved"] = True
             else:
-                info["has_original"] = False
-            self.data[target] = self.data[info["tempfile"]]
-            del self.data[info["tempfile"]]
-            info["moved"] = True
+                if self._exists(target):
+                    info["has_original"] = True
+                    self._link(target, "%s.filesafe" % target)
+                else:
+                    info["has_original"] = False
+                rename = self._renames if info.get("recursive") else self._rename
+                rename(info["tempfile"], target)
+                info["moved"] = True
 
     def tpc_vote(self, transaction):
         pass
@@ -113,18 +179,27 @@ class DummyDataManager:
     def tpc_finish(self, transaction):
         for target in self.vault:
             info = self.vault[target]
-            if info.get("has_original"):
+            if info.get("deleted", False):
                 try:
-                    del self.data["%s.filesafe" % target]
-                except KeyError:
+                    self._unlink("%s.filesafe" % info["tempfile"])
+                except OSError:
+                    # XXX log.exception makes the testruns die with an
+                    # exception in multiprocessing.util:258
+                    # log.exception("Failed to remove file backup for %s",
+                    # target)
+                    pass
+            elif info.get("has_original"):
+                try:
+                    self._unlink("%s.filesafe" % target)
+                except OSError:
                     # XXX log.exception makes the testruns die with an
                     # exception in multiprocessing.util:258
                     # log.exception("Failed to remove file backup for %s",
                     # target)
                     pass
 
-        self.vault.clear()
         self.in_commit = False
+        self.vault.clear()
 
     def tpc_abort(self, transaction):
         for target in self.vault:
@@ -132,16 +207,13 @@ class DummyDataManager:
             if info.get("moved"):
                 try:
                     if info["has_original"]:
-                        oldname = "%s.filesafe" % target
-                        self.data[target] = self.data[oldname]
-                        del self.data[oldname]
+                        self._rename("%s.filesafe" % target, target)
                     elif 'source' in info:
-                        oldname = target
-                        self.data[info["source"]] = self.data[oldname]
-                        del self.data[oldname]
+                        rename = self._renames if info.get("recursive") else self._rename
+                        rename(target, info["source"])
                     else:
-                        del self.data[target]
-                except KeyError:
+                        self._unlink(target)
+                except OSError:
                     # XXX log.exception makes the testruns die with an
                     # exception in multiprocessing.util:258
                     # log.exception("Failed to restore original file %s",
@@ -149,16 +221,16 @@ class DummyDataManager:
                     pass
             else:
                 try:
-                    del self.data[info["tempfile"]]
-                except KeyError:
+                    self._unlink(info["tempfile"])
+                except OSError:
                     # XXX log.exception makes the testruns die with an
                     # exception in multiprocessing.util:258
                     # log.exception("Failed to delete temporary file %s",
                     # target)
                     pass
 
-        self.vault.clear()
         self.in_commit = False
+        self.vault.clear()
 
     abort = tpc_abort
 
@@ -186,8 +258,3 @@ def cleanup_dummy_data_manager():
     if isinstance(manager, DummyDataManager):
         del repoze.filesafe._local.manager
     return manager
-
-
-# Backwards compatibility only.
-setupDummyDataManager = setup_dummy_data_manager
-cleanupDummyDataManager = cleanup_dummy_data_manager

@@ -29,15 +29,8 @@ class FileSafeDataManager:
                 del self.vault[path]
             else:
                 raise ValueError("%s is already taken", path)
-        try:
-            file = tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir,
-                    delete=False)
-        except TypeError:
-            # Python pre-2.6 does not support the delete option, so play
-            # some tricks to prevent our file from disappearing.
-            file = tempfile.NamedTemporaryFile(mode=mode, dir=self.tempdir)
-            file.unlink = lambda x: x
-
+        file = tempfile.NamedTemporaryFile(
+            mode=mode, dir=self.tempdir, delete=False)
         self.vault[path] = dict(tempfile=file.name)
         return file
 
@@ -47,8 +40,14 @@ class FileSafeDataManager:
                 del self.vault[dst]
             else:
                 raise ValueError("%s is already taken", dst)
+        if src not in self.vault and not os.path.exists(src):
+            raise OSError(
+                errno.ENOENT,
+                "[Errno 2] No such file or directory: '%s'" % src)
         self.vault[dst] = dict(tempfile=src, source=src,
             moved=True, has_original=False, recursive=recursive)
+        self.vault[src] = dict(tempfile=src, destination=dst,
+            moved=True, has_original=os.path.exists(src), recursive=recursive)
 
     def open_file(self, path, mode="r"):
         if path in self.vault:
@@ -80,6 +79,24 @@ class FileSafeDataManager:
                         "[Errno 2] No such file or directory: '%s'" % path)
             self.vault[path] = dict(tempfile=path, deleted=True)
 
+    def file_exists(self, path):
+        if path in self.vault:
+            info = self.vault[path]
+            deleted = info.get('deleted', False)
+            moved = info.get('moved', False) and 'destination' in info
+            return not (deleted or moved)
+        return os.path.exists(path)
+
+    def file_path(self, path):
+        if not self.file_exists(path):
+            raise OSError(
+                errno.ENOENT,
+                "[Errno 2] No such file or directory: '%s'" % path)
+        if path in self.vault:
+            info = self.vault[path]
+            return info["tempfile"]
+        return path
+
     def tpc_begin(self, transaction):
         pass
 
@@ -87,6 +104,8 @@ class FileSafeDataManager:
         self.in_commit = True
         for target in self.vault:
             info = self.vault[target]
+            if info.get('moved', False) and 'destination' in info:
+                continue
             if info.get("deleted", False):
                 os.rename(target, "%s.filesafe" % target)
                 info["has_original"] = True

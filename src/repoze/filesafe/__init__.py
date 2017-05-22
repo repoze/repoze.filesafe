@@ -39,15 +39,20 @@ def open_file(path, mode='r'):
     mgr = _get_manager()
     return mgr.open_file(path, mode)
 
+
 def delete_file(path):
     mgr = _get_manager()
     return mgr.delete_file(path)
 
 
-# Backwards compatibility only
-createFile = create_file
-openFile = open_file
-deleteFile = delete_file
+def file_exists(path):
+    mgr = _get_manager()
+    return mgr.file_exists(path)
+
+
+def file_path(path):
+    mgr = _get_manager()
+    return mgr.file_path(path)
 
 
 class FileSafeMiddleware(object):

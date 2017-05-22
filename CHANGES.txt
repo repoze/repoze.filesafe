@@ -1,10 +1,24 @@
 Changelog
 =========
 
-2.3 - (unreleased)
+3.0 - (unreleased)
 ------------------
 
-- ...
+- Add ``file_exists`` and ``file_path`` functions which know about files
+  created and removed during the transaction.
+  [fschulze]
+
+- Throw OSError if src of rename doesn't exist.
+  [fschulze]
+
+- Dropped backward compatibility stuff for older API.
+  [fschulze]
+
+- Removed pre Python 2.6 support.
+  [fschulze]
+
+- Removed testing of Python 3.2, added Python 3.4, 3.5 and 3.6.
+  [fschulze]
 
 
 2.2 - (2015-05-01)
